@@ -9,6 +9,7 @@ admin.site.index_title = "Gestion de la plateforme"
 urlpatterns = [
     path("", RedirectView.as_view(url="/staff/", permanent=False)),
     path("global/", admin.site.urls),
+    path("api/v1/", include("apps.api.urls")),
     path("staff/import/", include("apps.imports.urls")),
     path("staff/", include("apps.staff.urls")),
     path("reader/", include("apps.reader.urls")),
