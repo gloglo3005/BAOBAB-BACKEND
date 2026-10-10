@@ -1,0 +1,9 @@
+{% extends "reader/base.html" %}
+{% block title %}Accès refusé{% endblock %}
+{% block content %}
+<section class="narrow">
+  <h1>Accès impossible</h1>
+  <p class="msg msg-warning">{{ message }}</p>
+  <p><a class="btn" href="{% url 'reader:home' %}">Mes bibliothèques</a></p>
+</section>
+{% endblock %}

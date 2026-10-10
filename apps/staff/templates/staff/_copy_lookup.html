@@ -1,0 +1,23 @@
+{% if panel.too_short %}
+  <p class="hint">Tapez au moins 2 caractères.</p>
+{% elif panel.query and not panel.rows %}
+  <p class="hint">Aucun exemplaire trouvé pour « {{ panel.query }} ». Vérifiez le code d'inventaire.</p>
+{% else %}
+  {% for row in panel.rows %}
+    {% if panel.single %}<input type="hidden" name="copy_id" value="{{ row.copy.pk }}">{% endif %}
+    <label class="choice{% if not row.selectable %} is-disabled{% endif %}">
+      {% if not panel.single %}<input type="radio" name="copy_id" value="{{ row.copy.pk }}"{% if not row.selectable %} disabled{% endif %}>{% endif %}
+      <span class="choice-main"><span class="code">{{ row.copy.inventory_code }}</span> <strong>{{ row.copy.book.title }}</strong></span>
+      {% if panel.single %}<span class="badge s-available">Disponible</span>{% endif %}
+      {% if not row.selectable and row.copy.status == 'AVAILABLE' %}
+        <span class="badge s-unavailable">Livre archivé : prêt impossible</span>
+      {% elif not row.selectable %}
+        <span class="badge s-{{ row.copy.status|lower }}">{{ row.copy.get_status_display }}</span>
+        {% if row.loan %}
+        <span class="choice-meta"><span>chez {{ row.loan.member.first_name }} {{ row.loan.member.last_name }}, retour prévu le {{ row.loan.due_date|date:"d/m/Y" }}</span>
+        <a href="{% url 'staff:return' %}?copy_q={{ row.copy.inventory_code|urlencode }}">Enregistrer son retour</a></span>
+        {% endif %}
+      {% endif %}
+    </label>
+  {% endfor %}
+{% endif %}

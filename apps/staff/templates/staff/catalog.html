@@ -1,0 +1,44 @@
+{% extends "staff/base.html" %}
+{% block title %}Catalogue{% endblock %}
+{% block content %}
+<div class="title-row">
+  <h1>Catalogue</h1>
+  <div class="actions-row tight">
+    <a class="btn" href="{% url 'staff:book_new' %}">Nouveau livre</a>
+    <a class="btn btn-secondary" href="{% url 'staff:catalog_settings' %}">Catégories et emplacements</a>
+  </div>
+</div>
+<form class="filters" method="get" action="{% url 'staff:catalog' %}" role="search">
+  <input type="search" name="q" value="{{ q }}" placeholder="Titre, auteur ou ISBN" aria-label="Rechercher un livre">
+  <select name="state" aria-label="Statut du livre">
+    <option value="active"{% if state == 'active' %} selected{% endif %}>Livres actifs</option>
+    <option value="archived"{% if state == 'archived' %} selected{% endif %}>Livres archivés</option>
+    <option value="all"{% if state == 'all' %} selected{% endif %}>Tous les livres</option>
+  </select>
+  <select name="category" aria-label="Catégorie">
+    <option value="">Toutes les catégories</option>
+    {% for item in categories %}<option value="{{ item.pk }}"{% if item.pk == category %} selected{% endif %}>{{ item.name }}</option>{% endfor %}
+  </select>
+  <button class="btn btn-secondary" type="submit">Filtrer</button>
+</form>
+{% if page.object_list %}
+<div class="table-wrap">
+<table class="table">
+  <thead><tr><th>Titre</th><th>Auteurs</th><th>Catégorie</th><th>Disponibles</th></tr></thead>
+  <tbody>
+  {% for book in page.object_list %}
+    <tr>
+      <td><a href="{% url 'staff:book_detail' book.pk %}">{{ book.title }}</a>{% if not book.active %} <span class="badge s-unavailable">Archivé</span>{% endif %}</td>
+      <td>{% for author in book.authors.all %}{{ author }}{% if not forloop.last %}, {% endif %}{% empty %}<span class="muted">-</span>{% endfor %}</td>
+      <td>{{ book.category|default:"-" }}</td>
+      <td>{{ book.copies_available }} sur {{ book.copies_total }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% include "staff/_pagination.html" %}
+{% else %}
+<p class="hint">{% if q or category or state != 'active' %}Aucun livre ne correspond à ces filtres.{% else %}Le catalogue est vide pour l'instant. Ajoutez le premier avec « Nouveau livre ».{% endif %}</p>
+{% endif %}
+{% endblock %}

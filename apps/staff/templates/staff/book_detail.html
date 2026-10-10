@@ -1,0 +1,60 @@
+{% extends "staff/base.html" %}
+{% block title %}{{ book.title }}{% endblock %}
+{% block content %}
+<div class="title-row">
+  <h1>{{ book.title }}{% if not book.active %} <span class="badge s-unavailable">Archivé</span>{% endif %}</h1>
+  <div class="actions-row tight">
+    <a class="btn btn-secondary" href="{% url 'staff:book_edit' book.pk %}">Modifier</a>
+    {% if book.active %}
+    <form method="post" action="{% url 'staff:book_archive' book.pk %}" class="inline-form" onsubmit="return confirm('Archiver ce livre ? Il ne pourra plus être prêté.');">{% csrf_token %}
+      <button class="btn btn-secondary" name="action" value="archive" type="submit">Archiver</button>
+    </form>
+    {% else %}
+    <form method="post" action="{% url 'staff:book_archive' book.pk %}" class="inline-form">{% csrf_token %}
+      <button class="btn" name="action" value="restore" type="submit">Restaurer</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+{% if book.subtitle %}<p class="subtitle">{{ book.subtitle }}</p>{% endif %}
+{% if not book.active %}<p class="notice">Ce livre est archivé : ses exemplaires ne peuvent plus être prêtés. Restaurez-le pour le remettre en service.</p>{% endif %}
+{% if book.active and borrowed_count %}<p class="hint">Archivage impossible tant que {{ borrowed_count }} exemplaire{{ borrowed_count|pluralize }} {{ borrowed_count|pluralize:"est,sont" }} emprunté{{ borrowed_count|pluralize }}.</p>{% endif %}
+<dl class="facts">
+  <div><dt>Auteurs</dt><dd>{% for author in authors %}{{ author }}{% if not forloop.last %}, {% endif %}{% empty %}non renseignés{% endfor %}</dd></div>
+  {% if book.category %}<div><dt>Catégorie</dt><dd>{{ book.category }}</dd></div>{% endif %}
+  {% if book.isbn %}<div><dt>ISBN</dt><dd>{{ book.isbn }}</dd></div>{% endif %}
+  {% if book.publisher %}<div><dt>Éditeur</dt><dd>{{ book.publisher }}</dd></div>{% endif %}
+  {% if book.publication_year %}<div><dt>Année</dt><dd>{{ book.publication_year }}</dd></div>{% endif %}
+</dl>
+{% if book.description %}<p class="description">{{ book.description }}</p>{% endif %}
+
+<div class="title-row">
+  <h2>Exemplaires</h2>
+  {% if book.active %}<a class="btn btn-small" href="{% url 'staff:copies_add' book.pk %}">Ajouter des exemplaires</a>{% endif %}
+</div>
+{% if copies %}
+<div class="table-wrap">
+<table class="table">
+  <thead><tr><th>Code</th><th>Statut</th><th>Emplacement</th><th>État</th><th>Situation</th><th></th></tr></thead>
+  <tbody>
+  {% for copy in copies %}
+    <tr>
+      <td><span class="code">{{ copy.inventory_code }}</span></td>
+      <td><span class="badge s-{{ copy.status|lower }}">{{ copy.get_status_display }}</span></td>
+      <td>{{ copy.location|default:"-" }}</td>
+      <td>{{ copy.get_condition_display }}</td>
+      <td>{% if copy.current_loan %}chez <a href="{% url 'staff:member_detail' copy.current_loan.member_id %}">{{ copy.current_loan.member.first_name }} {{ copy.current_loan.member.last_name }}</a>, retour le {{ copy.current_loan.due_date|date:"d/m/Y" }}{% else %}<span class="muted">-</span>{% endif %}</td>
+      <td class="nowrap">
+        <a class="btn btn-small btn-secondary" href="{% url 'staff:copy_edit' copy.pk %}">Modifier</a>
+        {% if copy.status == 'AVAILABLE' and book.active %}<a class="btn btn-small" href="{% url 'staff:loan' %}?copy_q={{ copy.inventory_code|urlencode }}">Prêter</a>
+        {% elif copy.current_loan %}<a class="btn btn-small btn-secondary" href="{% url 'staff:return' %}?copy_q={{ copy.inventory_code|urlencode }}">Rendre</a>{% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p class="hint">Ce livre n'a pas encore d'exemplaire.{% if book.active %} Ajoutez-en avec « Ajouter des exemplaires ».{% endif %}</p>
+{% endif %}
+{% endblock %}

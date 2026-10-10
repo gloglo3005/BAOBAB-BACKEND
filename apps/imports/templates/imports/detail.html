@@ -1,0 +1,111 @@
+{% extends "staff/base.html" %}
+{% block title %}Import {{ batch.file_name }}{% endblock %}
+{% block content %}
+<div class="title-row">
+  <h1>{% if batch.status == 'IMPORTED' %}Rapport d'import{% elif batch.status == 'FAILED' %}Import échoué{% else %}Aperçu de l'import{% endif %}</h1>
+  <div class="actions-row tight">
+    <a class="btn btn-secondary" href="{% url 'imports:import_history' %}">Historique des imports</a>
+  </div>
+</div>
+<p class="hint"><strong>{{ batch.file_name }}</strong> · envoyé le {{ batch.created_at|date:"d/m/Y à H:i" }}{% if batch.user %} par {{ batch.user.email }}{% endif %} · {% include "imports/_status.html" %}</p>
+
+{% if batch.status == 'IMPORTED' and result %}
+<dl class="stats">
+  <div class="stat"><dt>Livres créés</dt><dd>{{ result.books_created }}</dd></div>
+  <div class="stat"><dt>Livres déjà présents</dt><dd>{{ result.books_matched }}</dd></div>
+  <div class="stat"><dt>Exemplaires ajoutés</dt><dd>{{ result.copies_created }}</dd></div>
+  <div class="stat"><dt>Catégories créées</dt><dd>{{ result.categories_created }}</dd></div>
+  <div class="stat"><dt>Emplacements créés</dt><dd>{{ result.locations_created }}</dd></div>
+  <div class="stat"><dt>Auteurs créés</dt><dd>{{ result.authors_created }}</dd></div>
+</dl>
+<div class="actions-row">
+  <a class="btn btn-large" href="{% url 'staff:catalog' %}">Voir le catalogue</a>
+  <a class="btn btn-large btn-secondary" href="{% url 'imports:import_upload' %}">Nouvel import</a>
+</div>
+
+{% elif batch.status == 'FAILED' %}
+{% for item in batch.error_report %}<p class="msg msg-error">{{ item.message }}</p>{% endfor %}
+<p class="hint">Rien n'a été importé. Vous pouvez renvoyer le fichier pour un nouvel aperçu.</p>
+<div class="actions-row">
+  <a class="btn btn-large" href="{% url 'imports:import_upload' %}">Renvoyer un fichier</a>
+</div>
+
+{% else %}
+<dl class="stats">
+  <div class="stat"><dt>Lignes lues</dt><dd>{{ batch.row_count }}</dd></div>
+  <div class="stat"><dt>Livres à créer</dt><dd>{{ summary.books_new|default:0 }}</dd></div>
+  <div class="stat"><dt>Livres déjà présents</dt><dd>{{ summary.books_existing|default:0 }}</dd></div>
+  <div class="stat"><dt>Exemplaires à ajouter</dt><dd>{{ summary.copies|default:0 }}</dd></div>
+  <div class="stat{% if batch.error_count %} stat-alert{% endif %}"><dt>Lignes en erreur</dt><dd>{{ batch.error_count }}</dd></div>
+</dl>
+
+{% if summary.ignored_columns %}
+<p class="notice">Colonnes ignorées (non reconnues) : {{ summary.ignored_columns|join:", " }}.</p>
+{% endif %}
+
+{% if batch.error_count %}
+<p class="msg msg-error">Ce fichier contient {{ batch.error_count }} erreur{{ batch.error_count|pluralize }} : l'import est bloqué. Corrigez le fichier puis renvoyez-le.</p>
+<div class="table-wrap">
+<table class="table">
+  <thead><tr><th>Ligne</th><th>Problème</th></tr></thead>
+  <tbody>
+  {% for item in errors %}<tr><td class="nowrap">{{ item.line|default:"-" }}</td><td>{{ item.message }}</td></tr>{% endfor %}
+  </tbody>
+</table>
+</div>
+{% if errors_hidden %}<p class="hint">… et {{ errors_hidden }} autre{{ errors_hidden|pluralize }} erreur{{ errors_hidden|pluralize }} non affichée{{ errors_hidden|pluralize }}.</p>{% endif %}
+<div class="actions-row">
+  <a class="btn btn-large" href="{% url 'imports:import_upload' %}">Renvoyer le fichier corrigé</a>
+</div>
+{% endif %}
+
+{% if summary.new_categories or summary.new_locations or summary.new_authors %}
+<h2>Références nouvelles</h2>
+<p class="hint">Elles n'existent pas encore et seront créées à la confirmation.</p>
+<ul class="rows">
+  {% if summary.new_categories %}<li class="row"><span class="row-main">Catégories ({{ summary.new_categories|length }})</span><span class="row-meta">{{ summary.new_categories|join:", " }}</span></li>{% endif %}
+  {% if summary.new_locations %}<li class="row"><span class="row-main">Emplacements ({{ summary.new_locations|length }})</span><span class="row-meta">{{ summary.new_locations|join:", " }}</span></li>{% endif %}
+  {% if summary.new_authors %}<li class="row"><span class="row-main">Auteurs ({{ summary.new_authors|length }})</span><span class="row-meta">{{ summary.new_authors|join:", " }}</span></li>{% endif %}
+</ul>
+{% endif %}
+
+{% if matches %}
+<h2>Livres déjà présents</h2>
+<p class="hint">Les exemplaires du fichier s'ajoutent à ces livres, aucun second livre n'est créé.</p>
+<div class="table-wrap">
+<table class="table">
+  <thead><tr><th>Ligne</th><th>Titre du fichier</th><th>Livre existant</th><th>Trouvé par</th><th>Exemplaires</th></tr></thead>
+  <tbody>
+  {% for item in matches %}
+    <tr>
+      <td class="nowrap">{{ item.line }}</td>
+      <td>{{ item.title }}</td>
+      <td><a href="{% url 'staff:book_detail' item.existing_id %}">{{ item.existing_title }}</a></td>
+      <td>{{ item.matched_by }}</td>
+      <td>{{ item.copies }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% if matches_total > matches|length %}<p class="hint">… et {{ matches_total|add:"-100" }} autres livres déjà présents.</p>{% endif %}
+{% endif %}
+
+{% if warnings %}
+<h2>À noter</h2>
+<ul class="rows">
+  {% for item in warnings %}<li class="row"><span class="row-main">Ligne {{ item.line }} : {{ item.message }}</span></li>{% endfor %}
+</ul>
+{% if warnings_total > warnings|length %}<p class="hint">… et {{ warnings_total|add:"-20" }} autres remarques.</p>{% endif %}
+{% endif %}
+
+{% if batch.can_confirm %}
+<form method="post" action="{% url 'imports:import_confirm' batch.pk %}" onsubmit="this.querySelector('button').disabled = true;">{% csrf_token %}
+  <div class="actions-row">
+    <button class="btn btn-large" type="submit">Confirmer l'import</button>
+    <a class="btn btn-large btn-secondary" href="{% url 'imports:import_upload' %}">Annuler</a>
+  </div>
+</form>
+{% endif %}
+{% endif %}
+{% endblock %}

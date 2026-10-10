@@ -1,0 +1,31 @@
+{% extends "reader/base.html" %}
+{% block title %}Profil{% endblock %}
+{% block content %}
+<h1>Mon profil</h1>
+<section class="card">
+  <dl class="facts">
+    <div><dt>Nom</dt><dd>{{ request.user.first_name }} {{ request.user.last_name }}</dd></div>
+    <div><dt>Email</dt><dd>{{ request.user.email }}</dd></div>
+    {% if request.user.phone %}<div><dt>Téléphone</dt><dd>{{ request.user.phone }}</dd></div>{% endif %}
+  </dl>
+</section>
+
+<h2>Mes bibliothèques</h2>
+{% if memberships %}
+<ul class="cards">
+  {% for member in memberships %}
+  <li class="card">
+    <span class="card-title">{{ member.organization.name }}</span>
+    <p>{% include "reader/_status.html" %} <span class="muted code">{{ member.member_number }}</span></p>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}<p class="hint">Aucune pour l'instant.</p>{% endif %}
+<p><a class="btn btn-secondary" href="{% url 'reader:join' %}">Rejoindre une bibliothèque</a></p>
+
+<h2>Sécurité</h2>
+<p><a class="btn btn-secondary" href="{% url 'reader:password' %}">Changer mon mot de passe</a></p>
+<form method="post" action="{% url 'reader:logout' %}">{% csrf_token %}
+  <button class="btn btn-danger" type="submit">Se déconnecter</button>
+</form>
+{% endblock %}

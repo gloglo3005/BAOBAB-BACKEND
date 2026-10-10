@@ -1,0 +1,4 @@
+{% if member.status == 'ACCEPTED' %}<span class="badge b-good">Membre</span>
+{% elif member.status == 'PENDING' %}<span class="badge b-warn">En attente de validation</span>
+{% elif member.status == 'SUSPENDED' %}<span class="badge b-bad">Suspendu</span>
+{% else %}<span class="badge">Refusé</span>{% endif %}

@@ -1,0 +1,32 @@
+{% extends "reader/base.html" %}
+{% block title %}Mes bibliothèques{% endblock %}
+{% block content %}
+<h1>Bonjour {{ request.user.first_name }}</h1>
+{% if memberships %}
+<h2>Mes bibliothèques</h2>
+<ul class="cards">
+  {% for member in memberships %}
+  <li class="card">
+    {% if member.organization.status == 'ACTIVE' and member.organization.library_module and member.status != 'REJECTED' %}
+    <a class="card-title" href="{% url 'reader:library' member.pk %}">{{ member.organization.name }}</a>
+    {% else %}
+    <span class="card-title">{{ member.organization.name }}</span>
+    {% endif %}
+    <p>{% include "reader/_status.html" %} <span class="muted code">{{ member.member_number }}</span></p>
+    {% if member.organization.status != 'ACTIVE' or not member.organization.library_module %}
+      <p class="muted">Cette bibliothèque n'est pas disponible pour le moment.</p>
+    {% elif member.status == 'REJECTED' %}
+      <p class="muted">Votre demande a été refusée par cette bibliothèque.</p>
+    {% else %}
+      <p>{{ member.active_loans }} emprunt{{ member.active_loans|pluralize }} en cours{% if member.overdue_loans %} · <strong class="bad">{{ member.overdue_loans }} en retard</strong>{% endif %}</p>
+      <p class="links"><a href="{% url 'reader:catalog' member.pk %}">Catalogue</a><a href="{% url 'reader:loans' member.pk %}">Emprunts</a></p>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+<p><a class="btn btn-secondary" href="{% url 'reader:join' %}">Rejoindre une autre bibliothèque</a></p>
+{% else %}
+<p class="hint">Vous n'êtes encore membre d'aucune bibliothèque.</p>
+<p><a class="btn btn-large" href="{% url 'reader:join' %}">Rejoindre une bibliothèque</a></p>
+{% endif %}
+{% endblock %}

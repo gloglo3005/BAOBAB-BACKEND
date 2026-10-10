@@ -1,0 +1,20 @@
+{% extends "staff/base.html" %}
+{% block title %}Connexion{% endblock %}
+{% block content %}
+<section class="narrow">
+  <h1>Connexion à l'espace Staff</h1>
+  <form method="post" class="stack">{% csrf_token %}
+    {% if form.non_field_errors %}<p class="msg msg-error">{{ form.non_field_errors.0 }}</p>{% endif %}
+    <div class="field">
+      <label for="{{ form.username.id_for_label }}">Adresse email</label>
+      {{ form.username }}
+    </div>
+    <div class="field">
+      <label for="{{ form.password.id_for_label }}">Mot de passe</label>
+      {{ form.password }}
+    </div>
+    <input type="hidden" name="next" value="{{ next }}">
+    <button class="btn btn-large" type="submit">Se connecter</button>
+  </form>
+</section>
+{% endblock %}

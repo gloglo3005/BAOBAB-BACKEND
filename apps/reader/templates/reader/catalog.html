@@ -1,0 +1,30 @@
+{% extends "reader/base.html" %}
+{% block title %}Catalogue{% endblock %}
+{% block content %}
+<h1>Catalogue</h1>
+<form class="filters stack" method="get" action="{% url 'reader:catalog' member.pk %}" role="search">
+  <input type="search" name="q" value="{{ q }}" placeholder="Titre, auteur ou ISBN" aria-label="Rechercher un livre">
+  <select name="category" aria-label="Catégorie">
+    <option value="">Toutes les catégories</option>
+    {% for item in categories %}<option value="{{ item.pk }}"{% if item.pk == category %} selected{% endif %}>{{ item.name }}</option>{% endfor %}
+  </select>
+  <label class="check"><input type="checkbox" name="available" value="1"{% if only_available %} checked{% endif %}> Seulement les livres disponibles</label>
+  <button class="btn" type="submit">Filtrer</button>
+</form>
+{% if page.object_list %}
+<ul class="cards">
+  {% for book in page.object_list %}
+  <li class="card">
+    <a class="card-title" href="{% url 'reader:book_detail' member.pk book.pk %}">{{ book.title }}</a>
+    <p class="muted">{% for author in book.authors.all %}{{ author }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if book.category %}{% if book.authors.all %} · {% endif %}{{ book.category }}{% endif %}</p>
+    {% if book.copies_total == 0 %}<span class="badge">Aucun exemplaire</span>
+    {% elif book.copies_available %}<span class="badge b-good">Disponible ({{ book.copies_available }} sur {{ book.copies_total }})</span>
+    {% else %}<span class="badge b-warn">Tout est emprunté</span>{% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% include "reader/_pagination.html" %}
+{% else %}
+<p class="hint">{% if q or category or only_available %}Aucun livre ne correspond à votre recherche.{% else %}Le catalogue de cette bibliothèque est vide pour l'instant.{% endif %}</p>
+{% endif %}
+{% endblock %}

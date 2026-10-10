@@ -1,0 +1,20 @@
+{% extends "staff/base.html" %}
+{% block title %}Prêt enregistré{% endblock %}
+{% block content %}
+<section class="receipt">
+  <h1>Prêt enregistré</h1>
+  <p class="receipt-due">À rendre le <strong>{{ loan.due_date|date:"l j F Y" }}</strong></p>
+  <dl class="facts">
+    <div><dt>Livre</dt><dd>{{ loan.book_copy.book.title }}</dd></div>
+    <div><dt>Exemplaire</dt><dd><span class="code">{{ loan.book_copy.inventory_code }}</span></dd></div>
+    <div><dt>Membre</dt><dd>{{ loan.member.first_name }} {{ loan.member.last_name }} <span class="code">{{ loan.member.member_number }}</span></dd></div>
+    <div><dt>Prêté le</dt><dd>{{ loan.borrowed_at|date:"d/m/Y à H:i" }}</dd></div>
+    <div><dt>Par</dt><dd>{{ loan.issued_by.get_full_name|default:loan.issued_by.email }}</dd></div>
+    <div><dt>Prêt n°</dt><dd>{{ loan.pk }}</dd></div>
+  </dl>
+  <div class="actions-row no-print">
+    <a class="btn btn-large" href="{% url 'staff:loan' %}">Nouveau prêt</a>
+    <button class="btn btn-large btn-secondary" type="button" onclick="window.print()">Imprimer le reçu</button>
+  </div>
+</section>
+{% endblock %}

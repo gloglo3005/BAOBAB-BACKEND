@@ -1,0 +1,51 @@
+{% extends "staff/base.html" %}
+{% block title %}Tableau de bord{% endblock %}
+{% block content %}
+<h1>{{ request.organization.name }}</h1>
+{% if stats %}
+<form class="searchbar" method="get" action="{% url 'staff:search' %}" role="search">
+  <input class="scan" type="search" name="q" placeholder="Titre, auteur, code d'inventaire, membre" aria-label="Recherche rapide" autofocus>
+  <button class="btn" type="submit">Chercher</button>
+</form>
+
+<div class="actions-row">
+  <a class="btn btn-large" href="{% url 'staff:loan' %}">Prêter un livre</a>
+  <a class="btn btn-large btn-secondary" href="{% url 'staff:return' %}">Enregistrer un retour</a>
+</div>
+
+<dl class="stats">
+  <div class="stat"><dt>Prêts du jour</dt><dd>{{ stats.loans_today }}</dd></div>
+  <div class="stat"><dt>Retours du jour</dt><dd>{{ stats.returns_today }}</dd></div>
+  <a class="stat{% if stats.overdue %} stat-alert{% endif %}" href="{% url 'staff:overdue' %}"><dt>Prêts en retard</dt><dd>{{ stats.overdue }}</dd></a>
+  <div class="stat"><dt>Exemplaires disponibles</dt><dd>{{ stats.available }}</dd></div>
+  <div class="stat"><dt>Exemplaires empruntés</dt><dd>{{ stats.borrowed }}</dd></div>
+</dl>
+
+{% if stats.lost or stats.damaged %}
+<p class="notice">À surveiller : {{ stats.lost }} exemplaire{{ stats.lost|pluralize }} perdu{{ stats.lost|pluralize }}, {{ stats.damaged }} endommagé{{ stats.damaged|pluralize }}.</p>
+{% endif %}
+
+<h2>Derniers mouvements</h2>
+{% if stats.recent_loans %}
+<div class="table-wrap">
+<table class="table">
+  <thead><tr><th>Exemplaire</th><th>Membre</th><th>À rendre le</th><th>Statut</th></tr></thead>
+  <tbody>
+  {% for item in stats.recent_loans %}
+    <tr>
+      <td><span class="code">{{ item.book_copy.inventory_code }}</span> {{ item.book_copy.book.title }}</td>
+      <td><a href="{% url 'staff:member_detail' item.member_id %}">{{ item.member.first_name }} {{ item.member.last_name }}</a></td>
+      <td>{{ item.due_date|date:"d/m/Y" }}</td>
+      <td>{% if item.is_overdue %}<span class="badge s-overdue">En retard de {{ item.days_overdue }} jour{{ item.days_overdue|pluralize }}</span>{% else %}<span class="badge s-{{ item.status|lower }}">{{ item.get_status_display }}</span>{% endif %}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p class="hint">Aucun prêt pour l'instant. Commencez par « Prêter un livre ».</p>
+{% endif %}
+{% else %}
+<p class="hint">Aucun module de gestion n'est encore activé pour cette structure.</p>
+{% endif %}
+{% endblock %}

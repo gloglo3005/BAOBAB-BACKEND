@@ -1,0 +1,57 @@
+{% if too_short %}
+  <p class="hint">Tapez au moins 2 caractères.</p>
+{% elif results is None %}
+  <p class="hint">Un seul champ pour tout chercher : un livre, un exemplaire ou un membre.</p>
+{% elif not results.books and not results.copies and not results.members %}
+  <p class="hint">Aucun résultat pour « {{ q }} ». Vérifiez l'orthographe ou cherchez avec moins de mots.</p>
+{% else %}
+  {% if results.books %}
+  <h2>Livres</h2>
+  <ul class="rows">
+    {% for book in results.books %}
+    <li class="row">
+      <a class="row-main" href="{% url 'staff:book_detail' book.pk %}">{{ book.title }}{% if not book.active %} <span class="badge s-unavailable">Archivé</span>{% endif %}</a>
+      <span class="row-meta">{{ book.copies_available }} disponible{{ book.copies_available|pluralize }} sur {{ book.copies_total }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  {% if results.copies %}
+  <h2>Exemplaires</h2>
+  <ul class="rows">
+    {% for copy in results.copies %}
+    <li class="row">
+      <a class="row-main" href="{% url 'staff:book_detail' copy.book_id %}"><span class="code">{{ copy.inventory_code }}</span> {{ copy.book.title }}</a>
+      <span class="row-meta">
+        <span class="badge s-{{ copy.status|lower }}">{{ copy.get_status_display }}</span>
+        {% if copy.current_loan %}<span>chez {{ copy.current_loan.member.first_name }} {{ copy.current_loan.member.last_name }}, retour le {{ copy.current_loan.due_date|date:"d/m/Y" }}</span>{% endif %}
+      </span>
+      <span class="row-actions">
+        {% if copy.status == 'AVAILABLE' and copy.book.active %}<a class="btn btn-small" href="{% url 'staff:loan' %}?copy_q={{ copy.inventory_code|urlencode }}">Prêter</a>
+        {% elif copy.current_loan %}<a class="btn btn-small btn-secondary" href="{% url 'staff:return' %}?copy_q={{ copy.inventory_code|urlencode }}">Rendre</a>{% endif %}
+      </span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  {% if results.members %}
+  <h2>Membres</h2>
+  <ul class="rows">
+    {% for member in results.members %}
+    <li class="row">
+      <a class="row-main" href="{% url 'staff:member_detail' member.pk %}">{{ member.first_name }} {{ member.last_name }} <span class="code">{{ member.member_number }}</span></a>
+      <span class="row-meta">
+        <span class="badge s-{{ member.status|lower }}">{{ member.get_status_display }}</span>
+        <span>{{ member.active_loans }} prêt{{ member.active_loans|pluralize }} en cours</span>
+        {% if member.phone %}<span>{{ member.phone }}</span>{% endif %}
+      </span>
+      <span class="row-actions">
+        {% if member.status == 'ACCEPTED' %}<a class="btn btn-small" href="{% url 'staff:loan' %}?member_q={{ member.member_number|urlencode }}">Prêter</a>{% endif %}
+      </span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+{% endif %}

@@ -1,0 +1,38 @@
+{% extends "staff/base.html" %}
+{% block title %}{% if book %}Modifier « {{ book.title }} »{% else %}Nouveau livre{% endif %}{% endblock %}
+{% block content %}
+<section class="narrow wide">
+  <h1>{% if book %}Modifier le livre{% else %}Nouveau livre{% endif %}</h1>
+  <form method="post" class="stack">{% csrf_token %}
+    {% for error in form.non_field_errors %}<p class="msg msg-error">{{ error }}</p>{% endfor %}
+
+    {% include "staff/_field.html" with field=form.title %}
+    {% include "staff/_field.html" with field=form.subtitle %}
+    {% include "staff/_field.html" with field=form.authors_text %}
+    <div class="form-grid">
+      {% include "staff/_field.html" with field=form.isbn %}
+      {% include "staff/_field.html" with field=form.category %}
+      {% include "staff/_field.html" with field=form.publisher %}
+      {% include "staff/_field.html" with field=form.publication_year %}
+      {% include "staff/_field.html" with field=form.language %}
+    </div>
+    {% include "staff/_field.html" with field=form.description %}
+
+    {% if not book %}
+    <fieldset class="panel">
+      <legend>Exemplaires</legend>
+      {% include "staff/_field.html" with field=form.codes %}
+      <div class="form-grid">
+        {% include "staff/_field.html" with field=form.location %}
+        {% include "staff/_field.html" with field=form.condition %}
+      </div>
+    </fieldset>
+    {% endif %}
+
+    <div class="actions-row">
+      <button class="btn btn-large" type="submit">{% if book %}Enregistrer{% else %}Créer le livre{% endif %}</button>
+      <a class="btn btn-large btn-secondary" href="{% if book %}{% url 'staff:book_detail' book.pk %}{% else %}{% url 'staff:catalog' %}{% endif %}">Annuler</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

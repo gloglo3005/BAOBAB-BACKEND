@@ -1,0 +1,49 @@
+{% extends "staff/base.html" %}
+{% block title %}Prêt{% endblock %}
+{% block content %}
+<h1>Prêter un livre</h1>
+<form method="post" action="{% url 'staff:loan' %}" class="stack" id="loan-form">{% csrf_token %}
+  <section class="step">
+    <label for="member_q">Membre</label>
+    <input id="member_q" name="member_q" class="scan" value="{{ member_q }}" autocomplete="off"
+           placeholder="Numéro, nom ou téléphone" {% if not member_q %}autofocus{% endif %}
+           hx-get="{% url 'staff:loan_member_lookup' %}" hx-trigger="input changed delay:300ms" hx-target="#member-panel">
+    <div id="member-panel" aria-live="polite">{% include "staff/_member_lookup.html" with panel=member_panel %}</div>
+  </section>
+
+  <section class="step">
+    <label for="copy_q">Exemplaire</label>
+    <input id="copy_q" name="copy_q" class="scan" value="{{ copy_q }}" autocomplete="off"
+           placeholder="Code d'inventaire" {% if member_q and not copy_q %}autofocus{% endif %}
+           hx-get="{% url 'staff:loan_copy_lookup' %}" hx-trigger="input changed delay:300ms" hx-target="#copy-panel">
+    <div id="copy-panel" aria-live="polite">{% include "staff/_copy_lookup.html" with panel=copy_panel %}</div>
+  </section>
+
+  <div class="field">
+    <label for="notes">Note (facultatif)</label>
+    <input id="notes" name="notes" type="text" maxlength="200">
+  </div>
+  <button class="btn btn-large" id="loan-submit" type="submit">Prêter</button>
+</form>
+{% endblock %}
+{% block scripts %}
+<script>
+  // Entrée dans un champ de recherche lance la recherche au lieu d'envoyer le formulaire.
+  document.querySelectorAll("#member_q, #copy_q").forEach(function (input) {
+    input.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        if (window.htmx) { htmx.trigger(input, "input"); }
+      }
+    });
+  });
+  // Quand le membre et l'exemplaire sont trouvés, on passe directement au bouton.
+  document.body.addEventListener("htmx:afterSwap", function () {
+    var form = document.getElementById("loan-form");
+    if (form.querySelector("input[name=member_id]:not([type=radio])") &&
+        form.querySelector("input[name=copy_id]:not([type=radio])")) {
+      document.getElementById("loan-submit").focus();
+    }
+  });
+</script>
+{% endblock %}

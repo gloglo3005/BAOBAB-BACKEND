@@ -1,0 +1,27 @@
+{% extends "staff/base.html" %}
+{% block title %}Retards{% endblock %}
+{% block content %}
+<h1>Prêts en retard</h1>
+{% if page.object_list %}
+<p class="hint">{{ page.paginator.count }} prêt{{ page.paginator.count|pluralize }} en retard, du plus ancien au plus récent.</p>
+<div class="table-wrap">
+<table class="table">
+  <thead><tr><th>Retard</th><th>Membre</th><th>Exemplaire</th><th>À rendre le</th><th></th></tr></thead>
+  <tbody>
+  {% for loan in page.object_list %}
+    <tr>
+      <td><span class="badge s-overdue">{{ loan.days_overdue }} jour{{ loan.days_overdue|pluralize }}</span></td>
+      <td><a href="{% url 'staff:member_detail' loan.member_id %}">{{ loan.member.first_name }} {{ loan.member.last_name }}</a> <span class="code">{{ loan.member.member_number }}</span>{% if loan.member.phone %}<br><span class="muted">{{ loan.member.phone }}</span>{% endif %}</td>
+      <td><span class="code">{{ loan.book_copy.inventory_code }}</span> {{ loan.book_copy.book.title }}</td>
+      <td>{{ loan.due_date|date:"d/m/Y" }}</td>
+      <td><a class="btn btn-small btn-secondary" href="{% url 'staff:return' %}?copy_q={{ loan.book_copy.inventory_code|urlencode }}">Rendre</a></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% include "staff/_pagination.html" %}
+{% else %}
+<p class="hint">Aucun prêt en retard. Tous les livres sortis sont encore dans les délais.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "staff/base.html" %}
+{% block title %}Import{% endblock %}
+{% block content %}
+<div class="title-row">
+  <h1>Importer un catalogue</h1>
+  <div class="actions-row tight">
+    <a class="btn btn-secondary" href="{% url 'imports:import_template' %}">Télécharger le modèle CSV</a>
+    <a class="btn btn-secondary" href="{% url 'imports:import_history' %}">Historique des imports</a>
+  </div>
+</div>
+<section class="narrow">
+  <p class="hint">Envoyez un fichier avec une ligne par exemplaire. Trois lignes avec le même titre et trois codes (BIB-001, BIB-002, BIB-003) donnent un livre et trois exemplaires. Une ligne sans code crée seulement le livre. Rien n'est importé avant que vous ayez vérifié l'aperçu et confirmé.</p>
+  <form method="post" enctype="multipart/form-data" class="stack">{% csrf_token %}
+    {% for error in form.non_field_errors %}<p class="msg msg-error">{{ error }}</p>{% endfor %}
+    {% include "staff/_field.html" with field=form.file %}
+    <div class="actions-row">
+      <button class="btn btn-large" type="submit">Analyser le fichier</button>
+    </div>
+  </form>
+  <p class="hint">Colonnes reconnues : title (titre), inventory_code (code), isbn, author (auteur), category (catégorie), publication_year (année), publisher (éditeur), language (langue), location (emplacement), condition (état). Seul le titre est obligatoire. Plusieurs auteurs se séparent par « ; ».</p>
+</section>
+{% if recent %}
+<h2>Derniers imports</h2>
+{% include "imports/_batch_table.html" with batches=recent %}
+{% endif %}
+{% endblock %}

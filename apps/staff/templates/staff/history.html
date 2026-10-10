@@ -1,0 +1,36 @@
+{% extends "staff/base.html" %}
+{% block title %}Historique{% endblock %}
+{% block content %}
+<h1>Historique des prêts</h1>
+<form class="filters" method="get" action="{% url 'staff:history' %}" role="search">
+  <input type="search" name="q" value="{{ q }}" placeholder="Code, titre, numéro ou nom du membre" aria-label="Rechercher un prêt">
+  <select name="status" aria-label="Statut">
+    <option value="">Tous les statuts</option>
+    {% for value, label in statuses %}<option value="{{ value }}"{% if value == status %} selected{% endif %}>{{ label }}</option>{% endfor %}
+  </select>
+  <button class="btn btn-secondary" type="submit">Filtrer</button>
+</form>
+{% if page.object_list %}
+<div class="table-wrap">
+<table class="table">
+  <thead><tr><th>Prêté le</th><th>Exemplaire</th><th>Membre</th><th>À rendre le</th><th>Rendu le</th><th>Statut</th><th>Agents</th></tr></thead>
+  <tbody>
+  {% for loan in page.object_list %}
+    <tr>
+      <td>{{ loan.borrowed_at|date:"d/m/Y H:i" }}</td>
+      <td><span class="code">{{ loan.book_copy.inventory_code }}</span> {{ loan.book_copy.book.title }}</td>
+      <td><a href="{% url 'staff:member_detail' loan.member_id %}">{{ loan.member.first_name }} {{ loan.member.last_name }}</a></td>
+      <td>{{ loan.due_date|date:"d/m/Y" }}</td>
+      <td>{{ loan.returned_at|date:"d/m/Y H:i"|default:"-" }}</td>
+      <td>{% if loan.is_overdue %}<span class="badge s-overdue">En retard</span>{% else %}<span class="badge s-{{ loan.status|lower }}">{{ loan.get_status_display }}</span>{% endif %}</td>
+      <td class="muted">prêt : {{ loan.issued_by.email }}{% if loan.received_by %}<br>retour : {{ loan.received_by.email }}{% endif %}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% include "staff/_pagination.html" %}
+{% else %}
+<p class="hint">{% if q or status %}Aucun prêt ne correspond à ces filtres.{% else %}Aucun prêt enregistré pour l'instant.{% endif %}</p>
+{% endif %}
+{% endblock %}

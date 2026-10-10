@@ -1,0 +1,20 @@
+{% if panel.too_short %}
+  <p class="hint">Tapez au moins 2 caractères.</p>
+{% elif panel.query and not panel.rows %}
+  <p class="hint">Aucun prêt en cours pour « {{ panel.query }} ». Vérifiez le code d'inventaire ou le numéro de membre.</p>
+{% else %}
+  {% for loan in panel.rows %}
+    {% if panel.single %}<input type="hidden" name="loan_id" value="{{ loan.pk }}">{% endif %}
+    <label class="choice">
+      {% if not panel.single %}<input type="radio" name="loan_id" value="{{ loan.pk }}">{% endif %}
+      <span class="choice-main"><span class="code">{{ loan.book_copy.inventory_code }}</span> <strong>{{ loan.book_copy.book.title }}</strong></span>
+      <span class="choice-meta">
+        <span>{{ loan.member.first_name }} {{ loan.member.last_name }} <span class="code">{{ loan.member.member_number }}</span></span>
+        <span>prêté le {{ loan.borrowed_at|date:"d/m/Y" }}</span>
+        <span>à rendre le {{ loan.due_date|date:"d/m/Y" }}</span>
+      </span>
+      {% if loan.is_overdue %}<span class="badge s-overdue">En retard de {{ loan.days_overdue }} jour{{ loan.days_overdue|pluralize }}</span>
+      {% elif panel.single %}<span class="badge s-accepted">Sélectionné</span>{% endif %}
+    </label>
+  {% endfor %}
+{% endif %}

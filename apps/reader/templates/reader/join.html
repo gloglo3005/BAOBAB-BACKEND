@@ -1,0 +1,38 @@
+{% extends "reader/base.html" %}
+{% block title %}Rejoindre une bibliothèque{% endblock %}
+{% block content %}
+<h1>Rejoindre une bibliothèque</h1>
+
+<section>
+  <h2>J'ai un code</h2>
+  <p class="hint">Si la bibliothèque vous a déjà inscrit au comptoir, elle peut vous remettre un code pour relier votre compte à votre fiche de membre.</p>
+  <form method="post" class="stack">{% csrf_token %}
+    {% include "reader/_field.html" with field=code_form.code %}
+    <button class="btn" type="submit">Utiliser ce code</button>
+  </form>
+</section>
+
+<section>
+  <h2>Demander à rejoindre</h2>
+  {% if organizations %}
+  <ul class="cards">
+    {% for organization in organizations %}
+    <li class="card">
+      <span class="card-title">{{ organization.name }}</span>
+      <p class="muted">{{ organization.city }}{% if organization.city and organization.address %} · {% endif %}{{ organization.address }}</p>
+      {% if organization.my_member %}
+        {% if organization.my_member.status == 'REJECTED' %}<span class="badge">Demande refusée</span>
+        {% else %}<a class="btn btn-secondary" href="{% url 'reader:library' organization.my_member.pk %}">Ouvrir</a>{% endif %}
+      {% else %}
+      <form method="post" action="{% url 'reader:join_request' organization.pk %}">{% csrf_token %}
+        <button class="btn" type="submit">Demander à rejoindre</button>
+      </form>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="hint">Aucune bibliothèque n'est ouverte aux inscriptions pour le moment.</p>
+  {% endif %}
+</section>
+{% endblock %}

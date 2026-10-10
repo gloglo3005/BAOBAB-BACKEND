@@ -1,0 +1,9 @@
+{% extends "reader/base.html" %}
+{% block title %}Introuvable{% endblock %}
+{% block content %}
+<section class="narrow">
+  <h1>Livre introuvable</h1>
+  <p class="hint">Ce livre n'existe pas ou n'est plus au catalogue.</p>
+  <p><a class="btn" href="{% url 'reader:catalog' member.pk %}">Retour au catalogue</a></p>
+</section>
+{% endblock %}

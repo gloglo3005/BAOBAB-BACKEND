@@ -1,0 +1,20 @@
+{% extends "staff/base.html" %}
+{% block title %}Réglages du catalogue{% endblock %}
+{% block content %}
+<div class="title-row">
+  <h1>Réglages du catalogue</h1>
+  <a class="btn btn-secondary" href="{% url 'staff:catalog' %}">Retour au catalogue</a>
+</div>
+<p class="hint">Une catégorie ou un emplacement ne se supprime pas : on le désactive. Il reste sur les livres et exemplaires existants, mais n'est plus proposé pour les nouveaux.</p>
+
+<div class="two-cols">
+  <section>
+    <h2>Catégories</h2>
+    {% include "staff/_reference_list.html" with kind="category" items=categories form=category_form what="catégorie" %}
+  </section>
+  <section>
+    <h2>Emplacements</h2>
+    {% include "staff/_reference_list.html" with kind="location" items=locations form=location_form what="emplacement" %}
+  </section>
+</div>
+{% endblock %}

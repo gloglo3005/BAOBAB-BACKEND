@@ -1,0 +1,17 @@
+{% extends "staff/base.html" %}
+{% block title %}Choisir une structure{% endblock %}
+{% block content %}
+<section class="narrow">
+  <h1>Pour quelle structure travaillez-vous ?</h1>
+  <form method="post" class="stack">{% csrf_token %}
+    {% for membership in memberships %}
+    <button class="choice choice-button" type="submit" name="organization" value="{{ membership.organization_id }}">
+      <span class="choice-main"><strong>{{ membership.organization.name }}</strong></span>
+      <span class="choice-meta">
+        {% for module in membership.organization.enabled_modules %}<span>{{ module.label }}</span>{% endfor %}
+      </span>
+    </button>
+    {% endfor %}
+  </form>
+</section>
+{% endblock %}

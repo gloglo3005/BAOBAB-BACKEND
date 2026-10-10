@@ -1,0 +1,38 @@
+{% extends "staff/base.html" %}
+{% block title %}Membres{% endblock %}
+{% block content %}
+<div class="title-row">
+  <h1>Membres</h1>
+  <a class="btn" href="{% url 'staff:member_new' %}">Inscrire un membre</a>
+</div>
+<form class="filters" method="get" action="{% url 'staff:members' %}" role="search">
+  <input type="search" name="q" value="{{ q }}" placeholder="Numéro, nom ou téléphone" aria-label="Rechercher un membre">
+  <select name="status" aria-label="Statut">
+    <option value="">Tous les statuts</option>
+    {% for value, label in statuses %}<option value="{{ value }}"{% if value == status %} selected{% endif %}>{{ label }}</option>{% endfor %}
+  </select>
+  <button class="btn btn-secondary" type="submit">Filtrer</button>
+</form>
+{% if page.object_list %}
+<div class="table-wrap">
+<table class="table">
+  <thead><tr><th>Numéro</th><th>Nom</th><th>Téléphone</th><th>Email du compte</th><th>Statut</th><th>Prêts en cours</th></tr></thead>
+  <tbody>
+  {% for member in page.object_list %}
+    <tr>
+      <td><span class="code">{{ member.member_number }}</span></td>
+      <td><a href="{% url 'staff:member_detail' member.pk %}">{{ member.first_name }} {{ member.last_name }}</a></td>
+      <td>{{ member.phone|default:"-" }}</td>
+      <td>{{ member.user.email|default:"-" }}</td>
+      <td><span class="badge s-{{ member.status|lower }}">{{ member.get_status_display }}</span></td>
+      <td>{{ member.active_loans }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% include "staff/_pagination.html" %}
+{% else %}
+<p class="hint">{% if q or status %}Aucun membre ne correspond à cette recherche.{% else %}Aucun membre pour l'instant. Inscrivez le premier avec « Inscrire un membre ».{% endif %}</p>
+{% endif %}
+{% endblock %}

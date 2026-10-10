@@ -1,0 +1,13 @@
+{% extends "staff/base.html" %}
+{% block title %}Accès refusé{% endblock %}
+{% block content %}
+<section class="narrow">
+  <h1>Accès refusé</h1>
+  <p>{{ message }}</p>
+  {% if request.user.is_authenticated %}
+  <form method="post" action="{% url 'staff:logout' %}">{% csrf_token %}<button class="btn btn-secondary" type="submit">Se déconnecter</button></form>
+  {% else %}
+  <a class="btn" href="{% url 'staff:login' %}">Se connecter</a>
+  {% endif %}
+</section>
+{% endblock %}

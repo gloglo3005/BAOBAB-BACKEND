@@ -1,0 +1,19 @@
+{% if panel.too_short %}
+  <p class="hint">Tapez au moins 2 caractères.</p>
+{% elif panel.query and not panel.rows %}
+  <p class="hint">Aucun membre trouvé pour « {{ panel.query }} ». Inscrivez-le d'abord dans <a href="{% url 'staff:member_new' %}">Membres</a>.</p>
+{% else %}
+  {% for row in panel.rows %}
+    {% if panel.single %}<input type="hidden" name="member_id" value="{{ row.member.pk }}">{% endif %}
+    <label class="choice{% if not row.selectable %} is-disabled{% endif %}">
+      {% if not panel.single %}<input type="radio" name="member_id" value="{{ row.member.pk }}"{% if not row.selectable %} disabled{% endif %}>{% endif %}
+      <span class="choice-main"><strong>{{ row.member.first_name }} {{ row.member.last_name }}</strong> <span class="code">{{ row.member.member_number }}</span></span>
+      <span class="choice-meta">
+        <span>{{ row.member.active_loans }} prêt{{ row.member.active_loans|pluralize }} en cours</span>
+        {% if row.member.phone %}<span>{{ row.member.phone }}</span>{% endif %}
+      </span>
+      {% if panel.single %}<span class="badge s-accepted">Sélectionné</span>{% endif %}
+      {% if not row.selectable %}<span class="badge s-{{ row.member.status|lower }}">Prêt impossible : membre {{ row.member.get_status_display|lower }}</span>{% endif %}
+    </label>
+  {% endfor %}
+{% endif %}

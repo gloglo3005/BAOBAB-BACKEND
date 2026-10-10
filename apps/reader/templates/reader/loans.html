@@ -1,0 +1,14 @@
+{% extends "reader/base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<h1>{{ title }}</h1>
+{% if member.status == 'SUSPENDED' and kind != 'history' %}<p class="msg msg-error">Votre adhésion est suspendue. Rendez vos livres à la bibliothèque et contactez-la pour la réactiver.</p>{% endif %}
+{% if page.object_list %}
+<ul class="cards">
+  {% for loan in page.object_list %}{% include "reader/_loan.html" %}{% endfor %}
+</ul>
+{% include "reader/_pagination.html" %}
+{% else %}
+<p class="hint">{{ empty }}</p>
+{% endif %}
+{% endblock %}

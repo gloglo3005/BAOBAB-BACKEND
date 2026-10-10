@@ -1,0 +1,41 @@
+{% extends "reader/base.html" %}
+{% block title %}Accueil{% endblock %}
+{% block content %}
+<section class="card member-card">
+  <p class="muted">Ma carte de membre</p>
+  <p class="member-number">{{ member.member_number }}</p>
+  <p>{{ member.first_name }} {{ member.last_name }} {% include "reader/_status.html" %}</p>
+</section>
+
+{% if member.status == 'PENDING' %}
+<p class="msg msg-warning">Votre demande est en attente de validation par la bibliothèque. Vous pouvez déjà consulter le catalogue.</p>
+{% elif member.status == 'SUSPENDED' %}
+<p class="msg msg-error">Votre adhésion est suspendue : vous ne pouvez pas emprunter de nouveaux livres. Contactez la bibliothèque.</p>
+{% endif %}
+
+<form class="search" method="get" action="{% url 'reader:catalog' member.pk %}" role="search">
+  <input type="search" name="q" placeholder="Titre, auteur ou ISBN" aria-label="Rechercher un livre">
+  <button class="btn" type="submit">Chercher</button>
+</form>
+
+<dl class="stats">
+  <a class="stat" href="{% url 'reader:loans' member.pk %}"><dt>Emprunts en cours</dt><dd>{{ active_count }}</dd></a>
+  <a class="stat{% if request.overdue_count %} stat-alert{% endif %}" href="{% url 'reader:overdue' member.pk %}"><dt>En retard</dt><dd>{{ request.overdue_count }}</dd></a>
+</dl>
+
+{% if upcoming %}
+<h2>À rendre bientôt</h2>
+<ul class="cards">
+  {% for loan in upcoming %}{% include "reader/_loan.html" %}{% endfor %}
+</ul>
+{% endif %}
+
+{% if organization.address or organization.phone or organization.email %}
+<h2>Infos pratiques</h2>
+<section class="card">
+  {% if organization.address %}<p>{{ organization.address }}{% if organization.city %}, {{ organization.city }}{% endif %}</p>{% endif %}
+  {% if organization.phone %}<p>Téléphone : <a href="tel:{{ organization.phone }}">{{ organization.phone }}</a></p>{% endif %}
+  {% if organization.email %}<p>Email : <a href="mailto:{{ organization.email }}">{{ organization.email }}</a></p>{% endif %}
+</section>
+{% endif %}
+{% endblock %}

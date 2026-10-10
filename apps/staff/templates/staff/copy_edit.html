@@ -1,0 +1,37 @@
+{% extends "staff/base.html" %}
+{% block title %}Exemplaire {{ copy.inventory_code }}{% endblock %}
+{% block content %}
+<div class="title-row">
+  <h1>Exemplaire <span class="code">{{ copy.inventory_code }}</span></h1>
+  <span class="badge s-{{ copy.status|lower }}">{{ copy.get_status_display }}</span>
+</div>
+<p class="hint"><a href="{% url 'staff:book_detail' copy.book_id %}">{{ copy.book.title }}</a></p>
+
+<div class="two-cols">
+  <section>
+    <h2>Informations</h2>
+    <form method="post" class="stack">{% csrf_token %}
+      {% for error in form.non_field_errors %}<p class="msg msg-error">{{ error }}</p>{% endfor %}
+      {% include "staff/_field.html" with field=form.condition %}
+      {% include "staff/_field.html" with field=form.location %}
+      {% include "staff/_field.html" with field=form.acquisition_date %}
+      {% include "staff/_field.html" with field=form.notes %}
+      <button class="btn" type="submit">Enregistrer</button>
+    </form>
+  </section>
+
+  <section>
+    <h2>Statut</h2>
+    {% if copy.status == 'BORROWED' %}
+      <p class="notice">Cet exemplaire est emprunté{% if loan %} par <a href="{% url 'staff:member_detail' loan.member_id %}">{{ loan.member.first_name }} {{ loan.member.last_name }}</a>, retour prévu le {{ loan.due_date|date:"d/m/Y" }}{% endif %}. Son statut change avec le retour.</p>
+      <a class="btn btn-secondary" href="{% url 'staff:return' %}?copy_q={{ copy.inventory_code|urlencode }}">Enregistrer son retour</a>
+    {% else %}
+      <p class="hint">Pour les cas particuliers : retiré du rayon, abîmé, perdu ou retrouvé. Le prêt et le retour s'en chargent seuls.</p>
+      <form method="post" action="{% url 'staff:copy_status' copy.pk %}" class="stack">{% csrf_token %}
+        {% include "staff/_field.html" with field=status_form.status %}
+        <button class="btn btn-secondary" type="submit">Changer le statut</button>
+      </form>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

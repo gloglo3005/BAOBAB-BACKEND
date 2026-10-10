@@ -1,0 +1,15 @@
+{% extends "reader/base.html" %}
+{% block title %}Connexion{% endblock %}
+{% block content %}
+<section class="narrow">
+  <h1>Connexion</h1>
+  <form method="post" class="stack">{% csrf_token %}
+    {% if form.non_field_errors %}<p class="msg msg-error">{{ form.non_field_errors.0 }}</p>{% endif %}
+    {% include "reader/_field.html" with field=form.username %}
+    {% include "reader/_field.html" with field=form.password %}
+    <input type="hidden" name="next" value="{{ next }}">
+    <button class="btn btn-large" type="submit">Se connecter</button>
+  </form>
+  <p class="center">Pas encore de compte ? <a href="{% url 'reader:register' %}">Créer un compte</a></p>
+</section>
+{% endblock %}

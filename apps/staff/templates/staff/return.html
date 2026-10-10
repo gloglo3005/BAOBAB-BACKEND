@@ -1,0 +1,38 @@
+{% extends "staff/base.html" %}
+{% block title %}Retour{% endblock %}
+{% block content %}
+<h1>Enregistrer un retour</h1>
+<form method="post" action="{% url 'staff:return' %}" class="stack" id="return-form">{% csrf_token %}
+  <section class="step">
+    <label for="copy_q">Exemplaire rendu</label>
+    <input id="copy_q" name="copy_q" class="scan" value="{{ copy_q }}" autofocus autocomplete="off"
+           placeholder="Code d'inventaire, ou numéro de membre"
+           hx-get="{% url 'staff:return_lookup' %}" hx-trigger="input changed delay:300ms" hx-target="#return-panel">
+    <div id="return-panel" aria-live="polite">{% include "staff/_return_lookup.html" %}</div>
+  </section>
+
+  <fieldset class="step">
+    <legend>État de l'exemplaire</legend>
+    {% for value, label in outcome_choices %}
+    <label class="inline"><input type="radio" name="outcome" value="{{ value }}"{% if forloop.first %} checked{% endif %}> {{ label }}</label>
+    {% endfor %}
+  </fieldset>
+
+  <div class="field">
+    <label for="notes">Note (facultatif)</label>
+    <input id="notes" name="notes" type="text" maxlength="200">
+  </div>
+  <button class="btn btn-large" type="submit">Enregistrer le retour</button>
+</form>
+{% endblock %}
+{% block scripts %}
+<script>
+  var input = document.getElementById("copy_q");
+  input.addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      if (window.htmx) { htmx.trigger(input, "input"); }
+    }
+  });
+</script>
+{% endblock %}

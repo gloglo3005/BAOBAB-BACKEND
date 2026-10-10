@@ -1,0 +1,32 @@
+{% extends "reader/base.html" %}
+{% block title %}{{ book.title }}{% endblock %}
+{% block content %}
+<p><a href="{% url 'reader:catalog' member.pk %}">‹ Catalogue</a></p>
+<h1>{{ book.title }}</h1>
+{% if book.subtitle %}<p class="muted">{{ book.subtitle }}</p>{% endif %}
+<p>{% for author in authors %}{{ author }}{% if not forloop.last %}, {% endif %}{% empty %}<span class="muted">Auteur non renseigné</span>{% endfor %}</p>
+
+<section class="card">
+  {% if available %}<span class="badge b-good">{{ available }} exemplaire{{ available|pluralize }} disponible{{ available|pluralize }}</span>
+  {% else %}<span class="badge b-warn">Aucun exemplaire disponible pour le moment</span>{% endif %}
+  {% if locations %}
+  <ul class="plain">
+    {% for name, total in locations %}<li>{{ name|default:"Emplacement non précisé" }} : {{ total }}</li>{% endfor %}
+  </ul>
+  {% endif %}
+  <p class="hint">Pour emprunter, présentez-vous à la bibliothèque avec votre numéro de membre {{ member.member_number }}.</p>
+</section>
+
+{% for loan in my_loans %}
+<p class="msg msg-info">Vous avez déjà ce livre : à rendre le {{ loan.due_date|date:"d/m/Y" }}.</p>
+{% endfor %}
+
+<dl class="facts">
+  {% if book.category %}<div><dt>Catégorie</dt><dd>{{ book.category }}</dd></div>{% endif %}
+  {% if book.publisher %}<div><dt>Éditeur</dt><dd>{{ book.publisher }}</dd></div>{% endif %}
+  {% if book.publication_year %}<div><dt>Année</dt><dd>{{ book.publication_year }}</dd></div>{% endif %}
+  {% if book.language %}<div><dt>Langue</dt><dd>{{ book.language }}</dd></div>{% endif %}
+  {% if book.isbn %}<div><dt>ISBN</dt><dd>{{ book.isbn }}</dd></div>{% endif %}
+</dl>
+{% if book.description %}<h2>Description</h2><p>{{ book.description|linebreaksbr }}</p>{% endif %}
+{% endblock %}

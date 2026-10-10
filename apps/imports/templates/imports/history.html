@@ -1,0 +1,16 @@
+{% extends "staff/base.html" %}
+{% block title %}Historique des imports{% endblock %}
+{% block content %}
+<div class="title-row">
+  <h1>Historique des imports</h1>
+  <div class="actions-row tight">
+    <a class="btn" href="{% url 'imports:import_upload' %}">Nouvel import</a>
+  </div>
+</div>
+{% if page.object_list %}
+{% include "imports/_batch_table.html" with batches=page.object_list %}
+{% include "staff/_pagination.html" %}
+{% else %}
+<p class="hint">Aucun import pour l'instant.</p>
+{% endif %}
+{% endblock %}

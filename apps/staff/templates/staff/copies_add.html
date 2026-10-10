@@ -1,0 +1,18 @@
+{% extends "staff/base.html" %}
+{% block title %}Ajouter des exemplaires{% endblock %}
+{% block content %}
+<section class="narrow">
+  <h1>Ajouter des exemplaires</h1>
+  <p class="hint">Livre : <strong>{{ book.title }}</strong></p>
+  <form method="post" class="stack">{% csrf_token %}
+    {% for error in form.non_field_errors %}<p class="msg msg-error">{{ error }}</p>{% endfor %}
+    {% include "staff/_field.html" with field=form.codes %}
+    {% include "staff/_field.html" with field=form.location %}
+    {% include "staff/_field.html" with field=form.condition %}
+    <div class="actions-row">
+      <button class="btn btn-large" type="submit">Ajouter</button>
+      <a class="btn btn-large btn-secondary" href="{% url 'staff:book_detail' book.pk %}">Annuler</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

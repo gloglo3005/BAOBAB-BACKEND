@@ -1,0 +1,14 @@
+{% extends "staff/base.html" %}
+{% block title %}Recherche{% endblock %}
+{% block content %}
+<h1>Recherche</h1>
+<form class="searchbar" method="get" action="{% url 'staff:search' %}" role="search">
+  <input class="scan" type="search" name="q" value="{{ q }}" autofocus autocomplete="off"
+         placeholder="Titre, ISBN, auteur, code d'inventaire, membre, téléphone"
+         aria-label="Recherche"
+         hx-get="{% url 'staff:search' %}" hx-trigger="input changed delay:300ms, search"
+         hx-target="#results" hx-push-url="true">
+  <button class="btn" type="submit">Chercher</button>
+</form>
+<div id="results" aria-live="polite">{% include "staff/_search_results.html" %}</div>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% load static %}<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Staff{% endblock %}{% if request.organization %} · {{ request.organization.name }}{% endif %}</title>
+  <link rel="stylesheet" href="{% static 'staff/staff.css' %}">
+  <script src="{% static 'staff/htmx.min.js' %}" defer></script>
+</head>
+<body>
+{% with section=request.resolver_match.url_name %}
+{% if request.organization %}
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="{% url 'staff:dashboard' %}">{{ request.organization.name }}</a>
+    <div class="who">
+      {% if request.staff_memberships|length > 1 %}<a href="{% url 'staff:organizations' %}">Changer de structure</a>{% endif %}
+      <span class="who-mail">{{ request.user.email }}</span>
+      <form method="post" action="{% url 'staff:logout' %}">{% csrf_token %}<button class="linklike" type="submit">Se déconnecter</button></form>
+    </div>
+  </div>
+  <nav class="nav" aria-label="Navigation principale">
+    <a href="{% url 'staff:dashboard' %}"{% if section == 'dashboard' %} aria-current="page"{% endif %}>Tableau de bord</a>
+    {% if request.organization.library_module %}
+    <a href="{% url 'staff:search' %}"{% if section == 'search' %} aria-current="page"{% endif %}>Recherche</a>
+    <a href="{% url 'staff:loan' %}"{% if section == 'loan' or section == 'loan_receipt' %} aria-current="page"{% endif %}>Prêt</a>
+    <a href="{% url 'staff:return' %}"{% if section == 'return' %} aria-current="page"{% endif %}>Retour</a>
+    <a href="{% url 'staff:overdue' %}"{% if section == 'overdue' %} aria-current="page"{% endif %}>Retards</a>
+    <a href="{% url 'staff:members' %}"{% if section == 'members' or section == 'member_new' or section == 'member_detail' %} aria-current="page"{% endif %}>Membres</a>
+    <a href="{% url 'staff:catalog' %}"{% if section == 'catalog' or section == 'book_detail' %} aria-current="page"{% endif %}>Catalogue</a>
+    <a href="{% url 'staff:history' %}"{% if section == 'history' %} aria-current="page"{% endif %}>Historique</a>
+    <a href="{% url 'imports:import_upload' %}"{% if section == 'import_upload' or section == 'import_detail' or section == 'import_history' %} aria-current="page"{% endif %}>Import</a>
+    {% endif %}
+  </nav>
+</header>
+{% endif %}
+{% endwith %}
+<main class="page">
+  {% if messages %}
+  <div class="messages" role="status">
+    {% for message in messages %}<p class="msg msg-{{ message.level_tag }}">{{ message }}</p>{% endfor %}
+  </div>
+  {% endif %}
+  {% block content %}{% endblock %}
+</main>
+{% block scripts %}{% endblock %}
+</body>
+</html>

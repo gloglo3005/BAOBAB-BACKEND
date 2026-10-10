@@ -1,0 +1,74 @@
+{% extends "staff/base.html" %}
+{% block title %}{{ member.first_name }} {{ member.last_name }}{% endblock %}
+{% block content %}
+<div class="title-row">
+  <h1>{{ member.first_name }} {{ member.last_name }} <span class="code">{{ member.member_number }}</span></h1>
+  <span class="badge s-{{ member.status|lower }}">{{ member.get_status_display }}</span>
+</div>
+
+<dl class="facts">
+  <div><dt>Téléphone</dt><dd>{{ member.phone|default:"non renseigné" }}</dd></div>
+  <div><dt>Email du compte</dt><dd>{% if member.user %}{{ member.user.email }}{% else %}pas de compte relié{% endif %}</dd></div>
+  <div><dt>Inscrit le</dt><dd>{{ member.joined_at|date:"d/m/Y"|default:"pas encore accepté" }}</dd></div>
+  <div><dt>Compte lecteur</dt><dd>{% if member.user_id %}relié{% else %}non relié{% endif %}</dd></div>
+</dl>
+
+<div class="actions-row">
+  {% if member.status == 'ACCEPTED' %}<a class="btn" href="{% url 'staff:loan' %}?member_q={{ member.member_number|urlencode }}">Prêter un livre</a>{% endif %}
+  <form method="post" action="{% url 'staff:member_action' member.pk %}" class="inline-form">{% csrf_token %}
+    {% if member.status == 'PENDING' %}
+      <button class="btn" name="action" value="accept" type="submit">Accepter la demande</button>
+      <button class="btn btn-secondary" name="action" value="reject" type="submit">Refuser la demande</button>
+    {% elif member.status == 'ACCEPTED' %}
+      <button class="btn btn-danger" name="action" value="suspend" type="submit">Suspendre</button>
+    {% elif member.status == 'SUSPENDED' %}
+      <button class="btn" name="action" value="reactivate" type="submit">Réactiver</button>
+    {% elif member.status == 'REJECTED' %}
+      <button class="btn" name="action" value="accept" type="submit">Accepter finalement</button>
+    {% endif %}
+    {% if can_link %}<button class="btn btn-secondary" name="action" value="link_code" type="submit">Générer un code de rattachement</button>{% endif %}
+  </form>
+</div>
+
+<h2>Prêts en cours</h2>
+{% if active_loans %}
+<div class="table-wrap">
+<table class="table">
+  <thead><tr><th>Exemplaire</th><th>Prêté le</th><th>À rendre le</th><th></th></tr></thead>
+  <tbody>
+  {% for loan in active_loans %}
+    <tr>
+      <td><span class="code">{{ loan.book_copy.inventory_code }}</span> {{ loan.book_copy.book.title }}</td>
+      <td>{{ loan.borrowed_at|date:"d/m/Y" }}</td>
+      <td>{{ loan.due_date|date:"d/m/Y" }} {% if loan.is_overdue %}<span class="badge s-overdue">En retard de {{ loan.days_overdue }} jour{{ loan.days_overdue|pluralize }}</span>{% endif %}</td>
+      <td><a class="btn btn-small btn-secondary" href="{% url 'staff:return' %}?copy_q={{ loan.book_copy.inventory_code|urlencode }}">Rendre</a></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p class="hint">Aucun prêt en cours.</p>
+{% endif %}
+
+<h2>Historique récent</h2>
+{% if history %}
+<div class="table-wrap">
+<table class="table">
+  <thead><tr><th>Exemplaire</th><th>Prêté le</th><th>Rendu le</th><th>Statut</th></tr></thead>
+  <tbody>
+  {% for loan in history %}
+    <tr>
+      <td><span class="code">{{ loan.book_copy.inventory_code }}</span> {{ loan.book_copy.book.title }}</td>
+      <td>{{ loan.borrowed_at|date:"d/m/Y" }}</td>
+      <td>{{ loan.returned_at|date:"d/m/Y"|default:"-" }}</td>
+      <td><span class="badge s-{{ loan.status|lower }}">{{ loan.get_status_display }}</span></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p class="hint">Pas encore d'historique.</p>
+{% endif %}
+{% endblock %}

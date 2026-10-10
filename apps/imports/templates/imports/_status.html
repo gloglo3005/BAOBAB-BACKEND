@@ -1,0 +1,5 @@
+{% if batch.status == 'IMPORTED' %}<span class="badge s-accepted">Importé</span>
+{% elif batch.status == 'FAILED' %}<span class="badge s-rejected">Échoué</span>
+{% elif batch.status == 'PREVIEWED' and batch.error_count %}<span class="badge s-overdue">À corriger</span>
+{% elif batch.status == 'PREVIEWED' %}<span class="badge s-pending">Prêt à confirmer</span>
+{% else %}<span class="badge s-pending">{{ batch.get_status_display }}</span>{% endif %}

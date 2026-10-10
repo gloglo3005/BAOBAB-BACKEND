@@ -1,0 +1,16 @@
+<li class="card loan">
+  <p class="loan-title">{{ loan.book_copy.book.title }}</p>
+  <p class="muted">{% for author in loan.book_copy.book.authors.all %}{{ author }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+  {% if loan.status == 'ACTIVE' %}
+    <p>À rendre le <strong>{{ loan.due_date|date:"d/m/Y" }}</strong></p>
+    {% if loan.days_left < 0 %}<span class="badge b-bad">En retard de {{ loan.days_overdue }} jour{{ loan.days_overdue|pluralize }}</span>
+    {% elif loan.days_left == 0 %}<span class="badge b-warn">À rendre aujourd'hui</span>
+    {% elif loan.days_left <= 3 %}<span class="badge b-warn">Plus que {{ loan.days_left }} jour{{ loan.days_left|pluralize }}</span>
+    {% else %}<span class="badge b-good">{{ loan.days_left }} jours restants</span>{% endif %}
+  {% elif loan.status == 'RETURNED' %}
+    <p class="muted">Emprunté le {{ loan.borrowed_at|date:"d/m/Y" }} · rendu le {{ loan.returned_at|date:"d/m/Y" }}</p>
+  {% else %}
+    <p class="muted">Emprunté le {{ loan.borrowed_at|date:"d/m/Y" }}</p>
+    <span class="badge b-bad">Déclaré perdu</span>
+  {% endif %}
+</li>

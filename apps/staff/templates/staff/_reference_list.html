@@ -1,0 +1,28 @@
+<form method="post" action="{% url 'staff:catalog_settings_action' %}" class="inline-form add-form">{% csrf_token %}
+  <input type="hidden" name="kind" value="{{ kind }}">
+  <input type="hidden" name="action" value="add">
+  <input type="text" name="{{ kind }}-name" maxlength="100" required placeholder="Nouvelle {{ what }}" aria-label="Nom de la {{ what }}">
+  <button class="btn" type="submit">Ajouter</button>
+</form>
+{% if items %}
+<ul class="rows">
+  {% for item in items %}
+  <li class="row{% if not item.active %} is-off{% endif %}">
+    <form method="post" action="{% url 'staff:catalog_settings_action' %}" class="inline-form grow">{% csrf_token %}
+      <input type="hidden" name="kind" value="{{ kind }}">
+      <input type="hidden" name="id" value="{{ item.pk }}">
+      <input type="text" name="name" value="{{ item.name }}" maxlength="100" aria-label="Nom">
+      <button class="btn btn-small btn-secondary" name="action" value="rename" type="submit">Renommer</button>
+      {% if item.active %}
+      <button class="btn btn-small btn-secondary" name="action" value="deactivate" type="submit">Désactiver</button>
+      {% else %}
+      <button class="btn btn-small" name="action" value="activate" type="submit">Réactiver</button>
+      {% endif %}
+    </form>
+    <span class="row-meta">{{ item.uses }} utilisation{{ item.uses|pluralize }}{% if not item.active %} · <span class="badge s-unavailable">Désactivé</span>{% endif %}</span>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="hint">Aucun élément pour l'instant.</p>
+{% endif %}
