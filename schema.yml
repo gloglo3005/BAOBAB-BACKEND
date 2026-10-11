@@ -1,0 +1,2704 @@
+openapi: 3.0.3
+info:
+  title: API de la plateforme bibliothèques
+  version: 1.0.0
+  description: API utilisée par le logiciel de bureau (staff) et l'application mobile
+    (lecteurs).
+paths:
+  /api/v1/auth/login/:
+    post:
+      operationId: auth_login_create
+      description: Connexion par email et mot de passe.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Login'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Login'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Login'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+          description: ''
+  /api/v1/auth/me/:
+    get:
+      operationId: auth_me_retrieve
+      description: Profil du compte connecté, ses structures de staff et ses fiches
+        de lecteur.
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+          description: ''
+  /api/v1/auth/password/:
+    post:
+      operationId: auth_password_create
+      description: Changement de mot de passe ; lève l'obligation de changement.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChange'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PasswordChange'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PasswordChange'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+          description: ''
+  /api/v1/auth/refresh/:
+    post:
+      operationId: auth_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/v1/ping/:
+    get:
+      operationId: ping_retrieve
+      description: Route publique pour vérifier que l'API répond.
+      tags:
+      - ping
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ping'
+          description: ''
+  /api/v1/reader/{member_id}/books/:
+    get:
+      operationId: reader_books_list
+      description: 'Catalogue : recherche `q`, filtre `category`, `available=1`.'
+      parameters:
+      - in: path
+        name: member_id
+        schema:
+          type: string
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      tags:
+      - reader
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedReaderBookListList'
+          description: ''
+  /api/v1/reader/{member_id}/books/{id}/:
+    get:
+      operationId: reader_books_retrieve
+      description: 'Détail d''un livre : disponibilité par emplacement et mes prêts
+        de ce livre.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: member_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - reader
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReaderBookDetail'
+          description: ''
+  /api/v1/reader/{member_id}/categories/:
+    get:
+      operationId: reader_categories_list
+      description: Catégories actives de la bibliothèque (pour filtrer le catalogue).
+      parameters:
+      - in: path
+        name: member_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - reader
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReaderCategory'
+          description: ''
+  /api/v1/reader/{member_id}/loans/:
+    get:
+      operationId: reader_loans_list
+      description: 'Mes prêts : `status=active` (défaut), `overdue` ou `history`.'
+      parameters:
+      - in: path
+        name: member_id
+        schema:
+          type: string
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      tags:
+      - reader
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedReaderLoanList'
+          description: ''
+  /api/v1/reader/{member_id}/summary/:
+    get:
+      operationId: reader_summary_retrieve
+      description: Mon statut dans cette bibliothèque, mes prêts en cours et en retard.
+      parameters:
+      - in: path
+        name: member_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - reader
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/reader/link/:
+    post:
+      operationId: reader_link_create
+      description: Relie mon compte à ma fiche de membre grâce à un code remis au
+        comptoir.
+      tags:
+      - reader
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LinkCodeInput'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LinkCodeInput'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LinkCodeInput'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReaderMembership'
+          description: ''
+  /api/v1/reader/memberships/:
+    get:
+      operationId: reader_memberships_list
+      description: 'GET : mes adhésions. POST : demande à rejoindre une structure
+        (en attente).'
+      tags:
+      - reader
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReaderMembership'
+          description: ''
+    post:
+      operationId: reader_memberships_create
+      description: 'GET : mes adhésions. POST : demande à rejoindre une structure
+        (en attente).'
+      tags:
+      - reader
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MembershipRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MembershipRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MembershipRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReaderMembership'
+          description: ''
+  /api/v1/reader/organizations/:
+    get:
+      operationId: reader_organizations_list
+      description: Structures où l'on peut s'inscrire (actives, avec le module bibliothèque).
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      tags:
+      - reader
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedOrganizationPublicList'
+          description: ''
+  /api/v1/staff/{organization_id}/books/:
+    get:
+      operationId: staff_books_list
+      description: 'GET : liste des livres (lecture). POST : crée un livre.'
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedBookListList'
+          description: ''
+    post:
+      operationId: staff_books_create
+      description: 'GET : liste des livres (lecture). POST : crée un livre.'
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookWrite'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BookWrite'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BookWrite'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookDetail'
+          description: ''
+  /api/v1/staff/{organization_id}/books/{id}/:
+    get:
+      operationId: staff_books_retrieve
+      description: 'GET : détail d''un livre (lecture). PATCH : modifie les champs
+        envoyés.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookDetail'
+          description: ''
+    patch:
+      operationId: staff_books_partial_update
+      description: 'GET : détail d''un livre (lecture). PATCH : modifie les champs
+        envoyés.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBookWrite'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBookWrite'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBookWrite'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookDetail'
+          description: ''
+  /api/v1/staff/{organization_id}/books/{id}/archive/:
+    post:
+      operationId: staff_books_archive_create
+      description: Archive un livre (refusé si un exemplaire est encore emprunté).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookDetail'
+          description: ''
+  /api/v1/staff/{organization_id}/books/{id}/copies/:
+    post:
+      operationId: staff_books_copies_create
+      description: Ajoute un ou plusieurs exemplaires à un livre (tout ou rien).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CopiesCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CopiesCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CopiesCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Copy'
+          description: ''
+  /api/v1/staff/{organization_id}/books/{id}/restore/:
+    post:
+      operationId: staff_books_restore_create
+      description: Remet un livre archivé dans le catalogue.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookDetail'
+          description: ''
+  /api/v1/staff/{organization_id}/categories/:
+    get:
+      operationId: staff_categories_list
+      description: 'GET : liste (filtres q, active). POST : crée une entrée.'
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCategoryList'
+          description: ''
+    post:
+      operationId: staff_categories_create
+      description: 'GET : liste (filtres q, active). POST : crée une entrée.'
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReferenceCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ReferenceCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ReferenceCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+  /api/v1/staff/{organization_id}/categories/{id}/:
+    get:
+      operationId: staff_categories_retrieve
+      description: 'GET : détail. PATCH : renomme (name) et/ou (dés)active (active).'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+    patch:
+      operationId: staff_categories_partial_update
+      description: 'GET : détail. PATCH : renomme (name) et/ou (dés)active (active).'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedReferenceUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedReferenceUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedReferenceUpdate'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+  /api/v1/staff/{organization_id}/copies/:
+    get:
+      operationId: staff_copies_list
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCopyList'
+          description: ''
+  /api/v1/staff/{organization_id}/copies/{id}/:
+    get:
+      operationId: staff_copies_retrieve
+      description: 'GET : détail d''un exemplaire (lecture). PATCH : état, notes,
+        date d''acquisition.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Copy'
+          description: ''
+    patch:
+      operationId: staff_copies_partial_update
+      description: 'GET : détail d''un exemplaire (lecture). PATCH : état, notes,
+        date d''acquisition.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCopyUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCopyUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCopyUpdate'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Copy'
+          description: ''
+  /api/v1/staff/{organization_id}/copies/{id}/move/:
+    post:
+      operationId: staff_copies_move_create
+      description: Change l'emplacement d'un exemplaire (location null pour le retirer).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CopyMove'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CopyMove'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CopyMove'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Copy'
+          description: ''
+  /api/v1/staff/{organization_id}/copies/{id}/status/:
+    post:
+      operationId: staff_copies_status_create
+      description: Change à la main le statut d'un exemplaire (hors prêt et retour).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CopyStatus'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CopyStatus'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CopyStatus'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Copy'
+          description: ''
+  /api/v1/staff/{organization_id}/dashboard/:
+    get:
+      operationId: staff_dashboard_retrieve
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/staff/{organization_id}/loans/:
+    get:
+      operationId: staff_loans_list
+      description: 'GET : liste des prêts (lecture). POST : enregistre un prêt.'
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedLoanList'
+          description: ''
+    post:
+      operationId: staff_loans_create
+      description: 'GET : liste des prêts (lecture). POST : enregistre un prêt.'
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoanCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LoanCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LoanCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Loan'
+          description: ''
+  /api/v1/staff/{organization_id}/loans/{id}/:
+    get:
+      operationId: staff_loans_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Loan'
+          description: ''
+  /api/v1/staff/{organization_id}/loans/{id}/lost/:
+    post:
+      operationId: staff_loans_lost_create
+      description: 'Raccourci : déclare un prêt perdu (équivaut à un retour avec outcome=LOST).'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoanLost'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LoanLost'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LoanLost'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Loan'
+          description: ''
+  /api/v1/staff/{organization_id}/loans/{id}/return/:
+    post:
+      operationId: staff_loans_return_create
+      description: Enregistre le retour d'un prêt (bon état, endommagé ou perdu).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoanReturn'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LoanReturn'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LoanReturn'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Loan'
+          description: ''
+  /api/v1/staff/{organization_id}/locations/:
+    get:
+      operationId: staff_locations_list
+      description: 'GET : liste (filtres q, active). POST : crée une entrée.'
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedLocationList'
+          description: ''
+    post:
+      operationId: staff_locations_create
+      description: 'GET : liste (filtres q, active). POST : crée une entrée.'
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReferenceCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ReferenceCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ReferenceCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+          description: ''
+  /api/v1/staff/{organization_id}/locations/{id}/:
+    get:
+      operationId: staff_locations_retrieve
+      description: 'GET : détail. PATCH : renomme (name) et/ou (dés)active (active).'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+          description: ''
+    patch:
+      operationId: staff_locations_partial_update
+      description: 'GET : détail. PATCH : renomme (name) et/ou (dés)active (active).'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedReferenceUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedReferenceUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedReferenceUpdate'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+          description: ''
+  /api/v1/staff/{organization_id}/members/:
+    get:
+      operationId: staff_members_list
+      description: 'GET : liste des membres (lecture). POST : inscription au comptoir.'
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedMemberList'
+          description: ''
+    post:
+      operationId: staff_members_create
+      description: 'GET : liste des membres (lecture). POST : inscription au comptoir.'
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MemberCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MemberCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+          description: ''
+  /api/v1/staff/{organization_id}/members/{id}/:
+    get:
+      operationId: staff_members_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+          description: ''
+  /api/v1/staff/{organization_id}/members/{id}/accept/:
+    post:
+      operationId: staff_members_accept_create
+      description: Accepte un membre en attente, ou un membre refusé.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+          description: ''
+  /api/v1/staff/{organization_id}/members/{id}/link-code/:
+    post:
+      operationId: staff_members_link_code_create
+      description: Génère un code de rattachement (usage unique, valable 7 jours).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinkCode'
+          description: ''
+  /api/v1/staff/{organization_id}/members/{id}/reactivate/:
+    post:
+      operationId: staff_members_reactivate_create
+      description: Réactive un membre suspendu.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+          description: ''
+  /api/v1/staff/{organization_id}/members/{id}/reject/:
+    post:
+      operationId: staff_members_reject_create
+      description: Refuse un membre en attente.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+          description: ''
+  /api/v1/staff/{organization_id}/members/{id}/suspend/:
+    post:
+      operationId: staff_members_suspend_create
+      description: Suspend un membre accepté.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+          description: ''
+components:
+  schemas:
+    BookDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          title: Titre
+          maxLength: 255
+        subtitle:
+          type: string
+          title: Sous-titre
+          maxLength: 255
+        isbn:
+          type: string
+          maxLength: 20
+        publication_year:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+          title: Année de publication
+        publisher:
+          type: string
+          title: Éditeur
+          maxLength: 150
+        language:
+          type: string
+          title: Langue
+          maxLength: 50
+        category:
+          allOf:
+          - $ref: '#/components/schemas/CategoryMini'
+          readOnly: true
+        authors:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        active:
+          type: boolean
+          title: Actif
+        copies_total:
+          type: integer
+          readOnly: true
+        copies_available:
+          type: integer
+          readOnly: true
+        description:
+          type: string
+        copies:
+          type: array
+          items:
+            $ref: '#/components/schemas/CopyInline'
+          readOnly: true
+      required:
+      - authors
+      - category
+      - copies
+      - copies_available
+      - copies_total
+      - id
+      - title
+    BookList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          title: Titre
+          maxLength: 255
+        subtitle:
+          type: string
+          title: Sous-titre
+          maxLength: 255
+        isbn:
+          type: string
+          maxLength: 20
+        publication_year:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+          title: Année de publication
+        publisher:
+          type: string
+          title: Éditeur
+          maxLength: 150
+        language:
+          type: string
+          title: Langue
+          maxLength: 50
+        category:
+          allOf:
+          - $ref: '#/components/schemas/CategoryMini'
+          readOnly: true
+        authors:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        active:
+          type: boolean
+          title: Actif
+        copies_total:
+          type: integer
+          readOnly: true
+        copies_available:
+          type: integer
+          readOnly: true
+      required:
+      - authors
+      - category
+      - copies_available
+      - copies_total
+      - id
+      - title
+    BookMini:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          title: Titre
+          maxLength: 255
+      required:
+      - id
+      - title
+    BookWrite:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 255
+        subtitle:
+          type: string
+          default: ''
+          maxLength: 255
+        description:
+          type: string
+          default: ''
+        isbn:
+          type: string
+          default: ''
+          maxLength: 20
+        publication_year:
+          type: integer
+          maximum: 9999
+          minimum: 1
+          nullable: true
+        publisher:
+          type: string
+          default: ''
+          maxLength: 150
+        language:
+          type: string
+          default: ''
+          maxLength: 50
+        category:
+          type: string
+          nullable: true
+          description: Identifiant d'une catégorie de la structure, ou null.
+        authors:
+          type: array
+          items:
+            type: string
+            maxLength: 201
+          description: Un nom complet par élément, par exemple « Chinua Achebe ».
+      required:
+      - title
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Nom
+          maxLength: 100
+        description:
+          type: string
+        active:
+          type: boolean
+      required:
+      - id
+      - name
+    CategoryMini:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Nom
+          maxLength: 100
+      required:
+      - id
+      - name
+    ConditionEnum:
+      enum:
+      - NEW
+      - GOOD
+      - FAIR
+      - POOR
+      type: string
+      description: |-
+        * `NEW` - Neuf
+        * `GOOD` - Bon
+        * `FAIR` - Passable
+        * `POOR` - Mauvais
+    CopiesCreate:
+      type: object
+      properties:
+        codes:
+          type: array
+          items:
+            type: string
+            maxLength: 50
+          description: Codes d'inventaire des exemplaires à ajouter (200 au plus).
+        location:
+          type: string
+          nullable: true
+        condition:
+          allOf:
+          - $ref: '#/components/schemas/ConditionEnum'
+          default: GOOD
+      required:
+      - codes
+    Copy:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        book:
+          allOf:
+          - $ref: '#/components/schemas/BookMini'
+          readOnly: true
+        inventory_code:
+          type: string
+          title: Code d'inventaire
+          maxLength: 50
+        location:
+          allOf:
+          - $ref: '#/components/schemas/LocationMini'
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/CopyStatusEnum'
+          title: Statut
+        condition:
+          allOf:
+          - $ref: '#/components/schemas/ConditionEnum'
+          title: État
+        acquisition_date:
+          type: string
+          format: date
+          nullable: true
+          title: Date d'acquisition
+        notes:
+          type: string
+      required:
+      - book
+      - id
+      - inventory_code
+      - location
+    CopyInline:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        inventory_code:
+          type: string
+          title: Code d'inventaire
+          maxLength: 50
+        location:
+          allOf:
+          - $ref: '#/components/schemas/LocationMini'
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/CopyStatusEnum'
+          title: Statut
+        condition:
+          allOf:
+          - $ref: '#/components/schemas/ConditionEnum'
+          title: État
+        acquisition_date:
+          type: string
+          format: date
+          nullable: true
+          title: Date d'acquisition
+        notes:
+          type: string
+      required:
+      - id
+      - inventory_code
+      - location
+    CopyMove:
+      type: object
+      properties:
+        location:
+          type: string
+          nullable: true
+          description: Identifiant de l'emplacement, ou null pour le retirer.
+      required:
+      - location
+    CopyStatus:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/CopyStatusStatusEnum'
+      required:
+      - status
+    CopyStatusEnum:
+      enum:
+      - AVAILABLE
+      - BORROWED
+      - LOST
+      - DAMAGED
+      - UNAVAILABLE
+      type: string
+      description: |-
+        * `AVAILABLE` - Disponible
+        * `BORROWED` - Emprunté
+        * `LOST` - Perdu
+        * `DAMAGED` - Endommagé
+        * `UNAVAILABLE` - Indisponible
+    CopyStatusStatusEnum:
+      enum:
+      - AVAILABLE
+      - UNAVAILABLE
+      - DAMAGED
+      - LOST
+      type: string
+      description: |-
+        * `AVAILABLE` - Disponible
+        * `UNAVAILABLE` - Indisponible
+        * `DAMAGED` - Endommagé
+        * `LOST` - Perdu
+    LinkCode:
+      type: object
+      properties:
+        code:
+          type: string
+        expires_at:
+          type: string
+          format: date-time
+        member:
+          type: string
+      required:
+      - code
+      - expires_at
+      - member
+    LinkCodeInput:
+      type: object
+      properties:
+        code:
+          type: string
+          maxLength: 20
+      required:
+      - code
+    Loan:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        book_copy:
+          type: integer
+          readOnly: true
+        inventory_code:
+          type: string
+          readOnly: true
+        book_title:
+          type: string
+          readOnly: true
+        member:
+          type: integer
+          readOnly: true
+        member_number:
+          type: string
+          readOnly: true
+        member_name:
+          type: string
+          readOnly: true
+        borrowed_at:
+          type: string
+          format: date-time
+          title: Emprunté le
+        due_date:
+          type: string
+          format: date
+          title: À rendre le
+        returned_at:
+          type: string
+          format: date-time
+          nullable: true
+          title: Rendu le
+        status:
+          allOf:
+          - $ref: '#/components/schemas/LoanStatusEnum'
+          title: Statut
+        renewal_count:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          title: Renouvellements
+        is_overdue:
+          type: boolean
+          readOnly: true
+        days_overdue:
+          type: integer
+          readOnly: true
+        notes:
+          type: string
+      required:
+      - book_copy
+      - book_title
+      - days_overdue
+      - due_date
+      - id
+      - inventory_code
+      - is_overdue
+      - member
+      - member_name
+      - member_number
+    LoanCreate:
+      type: object
+      properties:
+        book_copy:
+          type: string
+          description: Identifiant de l'exemplaire.
+        member:
+          type: string
+          description: Identifiant du membre.
+        notes:
+          type: string
+          default: ''
+      required:
+      - book_copy
+      - member
+    LoanLost:
+      type: object
+      properties:
+        notes:
+          type: string
+          default: ''
+    LoanReturn:
+      type: object
+      properties:
+        outcome:
+          allOf:
+          - $ref: '#/components/schemas/OutcomeEnum'
+          default: GOOD
+          description: |-
+            GOOD (bon état), DAMAGED (endommagé) ou LOST (perdu).
+
+            * `GOOD` - Rendu en bon état
+            * `DAMAGED` - Rendu endommagé
+            * `LOST` - Perdu
+        notes:
+          type: string
+          default: ''
+    LoanStatusEnum:
+      enum:
+      - ACTIVE
+      - RETURNED
+      - LOST
+      type: string
+      description: |-
+        * `ACTIVE` - En cours
+        * `RETURNED` - Rendu
+        * `LOST` - Perdu
+    Location:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Nom
+          maxLength: 100
+        description:
+          type: string
+        active:
+          type: boolean
+      required:
+      - id
+      - name
+    LocationMini:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Nom
+          maxLength: 100
+      required:
+      - id
+      - name
+    Login:
+      type: object
+      description: Connexion par email ; ajoute l'indicateur de changement de mot
+        de passe.
+      properties:
+        email:
+          type: string
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+      required:
+      - email
+      - password
+    LoginResponse:
+      type: object
+      properties:
+        access:
+          type: string
+        refresh:
+          type: string
+        must_change_password:
+          type: boolean
+      required:
+      - access
+      - must_change_password
+      - refresh
+    Me:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        first_name:
+          type: string
+          title: Prénom
+          maxLength: 150
+        last_name:
+          type: string
+          title: Nom
+          maxLength: 150
+        phone:
+          type: string
+          maxLength: 30
+        is_platform_admin:
+          type: boolean
+        must_change_password:
+          type: boolean
+        staff_organizations:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationSummary'
+          readOnly: true
+        memberships:
+          type: array
+          items:
+            $ref: '#/components/schemas/Membership'
+          readOnly: true
+      required:
+      - email
+      - id
+      - memberships
+      - staff_organizations
+    Member:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        member_number:
+          type: string
+          title: Numéro de membre
+          maxLength: 50
+        first_name:
+          type: string
+          title: Prénom
+          maxLength: 100
+        last_name:
+          type: string
+          title: Nom
+          maxLength: 100
+        phone:
+          type: string
+          title: Téléphone
+          maxLength: 30
+        status:
+          allOf:
+          - $ref: '#/components/schemas/MemberStatusEnum'
+          title: Statut
+        joined_at:
+          type: string
+          format: date
+          nullable: true
+          title: Date d'adhésion
+        active_loans:
+          type: integer
+          readOnly: true
+      required:
+      - active_loans
+      - first_name
+      - id
+      - last_name
+      - member_number
+    MemberCreate:
+      type: object
+      properties:
+        first_name:
+          type: string
+          maxLength: 100
+        last_name:
+          type: string
+          maxLength: 100
+        phone:
+          type: string
+          default: ''
+          maxLength: 30
+        member_number:
+          type: string
+          default: ''
+          description: Laisser vide pour une numérotation automatique (MEM-0001...).
+          maxLength: 50
+      required:
+      - first_name
+      - last_name
+    MemberStatusEnum:
+      enum:
+      - PENDING
+      - ACCEPTED
+      - REJECTED
+      - SUSPENDED
+      type: string
+      description: |-
+        * `PENDING` - En attente
+        * `ACCEPTED` - Accepté
+        * `REJECTED` - Refusé
+        * `SUSPENDED` - Suspendu
+    Membership:
+      type: object
+      properties:
+        member_id:
+          type: integer
+        member_number:
+          type: string
+          title: Numéro de membre
+          maxLength: 50
+        status:
+          allOf:
+          - $ref: '#/components/schemas/MemberStatusEnum'
+          title: Statut
+        organization:
+          $ref: '#/components/schemas/OrganizationSummary'
+      required:
+      - member_id
+      - member_number
+      - organization
+    MembershipRequest:
+      type: object
+      properties:
+        organization:
+          type: string
+          description: Identifiant de la structure.
+      required:
+      - organization
+    OrganizationMini:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Nom
+          maxLength: 200
+      required:
+      - id
+      - name
+    OrganizationPublic:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Nom
+          maxLength: 200
+        description:
+          type: string
+        city:
+          type: string
+          title: Ville
+          maxLength: 100
+        country:
+          type: string
+          title: Pays
+          maxLength: 100
+        my_membership:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+      required:
+      - id
+      - my_membership
+      - name
+    OrganizationSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Nom
+          maxLength: 200
+        slug:
+          type: string
+          title: Identifiant court
+          maxLength: 100
+          pattern: ^[-a-zA-Z0-9_]+$
+        library_module:
+          type: boolean
+          title: Module bibliothèque
+        coworking_module:
+          type: boolean
+          title: Module coworking
+      required:
+      - id
+      - name
+      - slug
+    OutcomeEnum:
+      enum:
+      - GOOD
+      - DAMAGED
+      - LOST
+      type: string
+      description: |-
+        * `GOOD` - Rendu en bon état
+        * `DAMAGED` - Rendu endommagé
+        * `LOST` - Perdu
+    PaginatedBookListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/BookList'
+    PaginatedCategoryList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+    PaginatedCopyList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Copy'
+    PaginatedLoanList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Loan'
+    PaginatedLocationList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Location'
+    PaginatedMemberList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Member'
+    PaginatedOrganizationPublicList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationPublic'
+    PaginatedReaderBookListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReaderBookList'
+    PaginatedReaderLoanList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReaderLoan'
+    PasswordChange:
+      type: object
+      properties:
+        old_password:
+          type: string
+          writeOnly: true
+        new_password:
+          type: string
+          writeOnly: true
+      required:
+      - new_password
+      - old_password
+    PatchedBookWrite:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 255
+        subtitle:
+          type: string
+          default: ''
+          maxLength: 255
+        description:
+          type: string
+          default: ''
+        isbn:
+          type: string
+          default: ''
+          maxLength: 20
+        publication_year:
+          type: integer
+          maximum: 9999
+          minimum: 1
+          nullable: true
+        publisher:
+          type: string
+          default: ''
+          maxLength: 150
+        language:
+          type: string
+          default: ''
+          maxLength: 50
+        category:
+          type: string
+          nullable: true
+          description: Identifiant d'une catégorie de la structure, ou null.
+        authors:
+          type: array
+          items:
+            type: string
+            maxLength: 201
+          description: Un nom complet par élément, par exemple « Chinua Achebe ».
+    PatchedCopyUpdate:
+      type: object
+      properties:
+        condition:
+          $ref: '#/components/schemas/ConditionEnum'
+        notes:
+          type: string
+        acquisition_date:
+          type: string
+          format: date
+          nullable: true
+    PatchedReferenceUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        active:
+          type: boolean
+    Ping:
+      type: object
+      properties:
+        status:
+          type: string
+        version:
+          type: string
+      required:
+      - status
+      - version
+    ReaderBookDetail:
+      type: object
+      description: 'Détail d''un livre : disponibilité par emplacement, sans codes
+        d''inventaire.'
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          title: Titre
+          maxLength: 255
+        subtitle:
+          type: string
+          title: Sous-titre
+          maxLength: 255
+        description:
+          type: string
+        language:
+          type: string
+          title: Langue
+          maxLength: 50
+        publication_year:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+          title: Année de publication
+        publisher:
+          type: string
+          title: Éditeur
+          maxLength: 150
+        isbn:
+          type: string
+          maxLength: 20
+        category:
+          allOf:
+          - $ref: '#/components/schemas/ReaderCategory'
+          readOnly: true
+        authors:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        availability:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          readOnly: true
+        available_total:
+          type: integer
+          readOnly: true
+        my_loans:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          readOnly: true
+      required:
+      - authors
+      - availability
+      - available_total
+      - category
+      - id
+      - my_loans
+      - title
+    ReaderBookList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          title: Titre
+          maxLength: 255
+        subtitle:
+          type: string
+          title: Sous-titre
+          maxLength: 255
+        language:
+          type: string
+          title: Langue
+          maxLength: 50
+        publication_year:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+          title: Année de publication
+        category:
+          allOf:
+          - $ref: '#/components/schemas/ReaderCategory'
+          readOnly: true
+        authors:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        copies_available:
+          type: integer
+          readOnly: true
+      required:
+      - authors
+      - category
+      - copies_available
+      - id
+      - title
+    ReaderCategory:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Nom
+          maxLength: 100
+      required:
+      - id
+      - name
+    ReaderLoan:
+      type: object
+      description: 'Un prêt vu par son lecteur : jamais de code d''inventaire ni de
+        note du staff.'
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        book:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        authors:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        borrowed_at:
+          type: string
+          format: date-time
+          title: Emprunté le
+        due_date:
+          type: string
+          format: date
+          title: À rendre le
+        returned_at:
+          type: string
+          format: date-time
+          nullable: true
+          title: Rendu le
+        status:
+          allOf:
+          - $ref: '#/components/schemas/LoanStatusEnum'
+          title: Statut
+        renewal_count:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          title: Renouvellements
+        is_overdue:
+          type: boolean
+          readOnly: true
+        days_overdue:
+          type: integer
+          readOnly: true
+        days_left:
+          type: integer
+          readOnly: true
+      required:
+      - authors
+      - book
+      - days_left
+      - days_overdue
+      - due_date
+      - id
+      - is_overdue
+    ReaderMembership:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        organization:
+          allOf:
+          - $ref: '#/components/schemas/OrganizationMini'
+          readOnly: true
+        member_number:
+          type: string
+          title: Numéro de membre
+          maxLength: 50
+        first_name:
+          type: string
+          title: Prénom
+          maxLength: 100
+        last_name:
+          type: string
+          title: Nom
+          maxLength: 100
+        status:
+          allOf:
+          - $ref: '#/components/schemas/MemberStatusEnum'
+          title: Statut
+        joined_at:
+          type: string
+          format: date
+          nullable: true
+          title: Date d'adhésion
+        active_loans:
+          type: integer
+          readOnly: true
+        overdue_loans:
+          type: integer
+          readOnly: true
+      required:
+      - active_loans
+      - first_name
+      - id
+      - last_name
+      - member_number
+      - organization
+      - overdue_loans
+    ReferenceCreate:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          default: ''
+      required:
+      - name
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          writeOnly: true
+      required:
+      - access
+      - refresh
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

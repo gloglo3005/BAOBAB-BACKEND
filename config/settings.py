@@ -149,7 +149,7 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.IsAuthenticated",
+        "apps.api.permissions.IsReady",
     ],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
@@ -174,3 +174,54 @@ CORS_ALLOWED_ORIGINS = [
     ).split(",")
     if o.strip()
 ]
+
+
+# --- Action 7 : débit, production, cache ---
+# JSON seul en production (l'interface navigable de DRF reste disponible en local).
+_renderers = ["rest_framework.renderers.JSONRenderer"]
+if DEBUG:
+    _renderers.append("rest_framework.renderers.BrowsableAPIRenderer")
+
+REST_FRAMEWORK.update({
+    "DEFAULT_RENDERER_CLASSES": _renderers,
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {"anon": "60/min", "user": "300/min"},
+    # Nombre de proxys entre Internet et l'application (voir la vérification après déploiement).
+    "NUM_PROXIES": int(os.environ["NUM_PROXIES"]) if os.environ.get("NUM_PROXIES") else None,
+})
+
+# En production, aucune origine CORS par défaut : CORS_ALLOWED_ORIGINS doit être défini.
+if not DEBUG and "CORS_ALLOWED_ORIGINS" not in os.environ:
+    CORS_ALLOWED_ORIGINS = []
+
+# HTTPS renforcé sur Render.
+if os.environ.get("RENDER"):
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = 3600
+    SECURE_REDIRECT_EXEMPT = [r"^api/v1/ping/$"]
+
+# Cache partagé entre les processus (optionnel) : définir CACHE_TABLE, par exemple api_cache.
+# Utile seulement si gunicorn tourne avec plusieurs workers.
+if os.environ.get("CACHE_TABLE"):
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+            "LOCATION": os.environ["CACHE_TABLE"],
+        }
+    }
+
+# Noms stables pour les énumérations de statut dans le schéma OpenAPI (clients React et Flutter).
+SPECTACULAR_SETTINGS["ENUM_NAME_OVERRIDES"] = {
+    "MemberStatusEnum": [
+        ("PENDING", "En attente"), ("ACCEPTED", "Accepté"),
+        ("REJECTED", "Refusé"), ("SUSPENDED", "Suspendu"),
+    ],
+    "LoanStatusEnum": [("ACTIVE", "En cours"), ("RETURNED", "Rendu"), ("LOST", "Perdu")],
+    "CopyStatusEnum": [
+        ("AVAILABLE", "Disponible"), ("BORROWED", "Emprunté"), ("LOST", "Perdu"),
+        ("DAMAGED", "Endommagé"), ("UNAVAILABLE", "Indisponible"),
+    ],
+}

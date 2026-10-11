@@ -12,7 +12,7 @@ from .serializers import (
     MeSerializer,
     PasswordChangeSerializer,
 )
-from .throttles import LoginRateThrottle
+from .throttles import LoginRateThrottle, PasswordChangeRateThrottle
 
 
 class PingView(APIView):
@@ -56,6 +56,7 @@ class PasswordChangeView(APIView):
     """Changement de mot de passe ; lève l'obligation de changement."""
 
     permission_classes = [IsAuthenticated]
+    throttle_classes = [PasswordChangeRateThrottle]
 
     @extend_schema(request=PasswordChangeSerializer, responses=LoginResponseSerializer)
     def post(self, request):
