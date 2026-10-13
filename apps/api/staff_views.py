@@ -86,7 +86,7 @@ class BookListView(StaffReadMixin, generics.ListAPIView):
             qs = safe_filter(qs, category_id=params["category"])
         if "active" in params:
             qs = qs.filter(active=params["active"].lower() in TRUE_VALUES)
-        return qs
+        return qs.order_by("title", "pk")
 
 
 class BookDetailView(StaffReadMixin, generics.RetrieveAPIView):
@@ -151,7 +151,7 @@ class MemberListView(StaffReadMixin, generics.ListAPIView):
             )
         if params.get("status"):
             qs = qs.filter(status=params["status"].upper())
-        return qs
+        return qs.order_by("last_name", "first_name", "pk")
 
 
 class MemberDetailView(StaffReadMixin, generics.RetrieveAPIView):
@@ -177,7 +177,7 @@ class LoanListView(StaffReadMixin, generics.ListAPIView):
             qs = safe_filter(qs, member_id=params["member"])
         if params.get("book_copy"):
             qs = safe_filter(qs, book_copy_id=params["book_copy"])
-        return qs
+        return qs.order_by("-borrowed_at", "-pk")
 
 
 class LoanDetailView(StaffReadMixin, generics.RetrieveAPIView):

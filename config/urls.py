@@ -2,9 +2,12 @@ from django.contrib import admin
 from django.urls import include, path
 from django.views.generic import RedirectView
 
+from apps.accounts.login_limits import AdminLoginForm
+
 admin.site.site_header = "Plateforme : administration globale"
 admin.site.site_title = "Administration globale"
 admin.site.index_title = "Gestion de la plateforme"
+admin.site.login_form = AdminLoginForm
 
 urlpatterns = [
     path("", RedirectView.as_view(url="/staff/", permanent=False)),

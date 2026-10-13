@@ -37,6 +37,24 @@ class AuditLog(models.Model):
         LOAN_RETURNED = "LOAN_RETURNED", "Prêt retourné"
         IMPORT_CONFIRMED = "IMPORT_CONFIRMED", "Import confirmé"
         IMPORT_FAILED = "IMPORT_FAILED", "Import échoué"
+        # --- coworking
+        COWORKING_PROFILE_UPDATED = "COWORKING_PROFILE_UPDATED", "Fiche coworking modifiée"
+        ZONE_CREATED = "ZONE_CREATED", "Zone créée"
+        ZONE_UPDATED = "ZONE_UPDATED", "Zone modifiée"
+        RESOURCE_CREATED = "RESOURCE_CREATED", "Ressource créée"
+        RESOURCE_UPDATED = "RESOURCE_UPDATED", "Ressource modifiée"
+        RATE_CREATED = "RATE_CREATED", "Tarif créé"
+        RATE_UPDATED = "RATE_UPDATED", "Tarif modifié"
+        CUSTOMER_CREATED = "CUSTOMER_CREATED", "Client coworking créé"
+        CUSTOMER_UPDATED = "CUSTOMER_UPDATED", "Client coworking modifié"
+        RESERVATION_CREATED = "RESERVATION_CREATED", "Réservation créée"
+        RESERVATION_CANCELLED = "RESERVATION_CANCELLED", "Réservation annulée"
+        RESERVATION_NO_SHOW = "RESERVATION_NO_SHOW", "Absence enregistrée"
+        SESSION_CHECKED_IN = "SESSION_CHECKED_IN", "Arrivée enregistrée"
+        SESSION_CHECKED_OUT = "SESSION_CHECKED_OUT", "Sortie enregistrée"
+        SESSION_CORRECTED = "SESSION_CORRECTED", "Session corrigée"
+        PAYMENT_RECORDED = "PAYMENT_RECORDED", "Paiement enregistré"
+        PAYMENT_VOIDED = "PAYMENT_VOIDED", "Paiement annulé"
 
     organization = models.ForeignKey(
         Organization, on_delete=models.PROTECT, related_name="audit_logs",

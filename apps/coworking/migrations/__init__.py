@@ -1,0 +1,1 @@
+# Migrations du module coworking.

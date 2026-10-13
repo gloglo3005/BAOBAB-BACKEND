@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.postgres",
     "rest_framework",
     "corsheaders",
     "drf_spectacular",
@@ -55,6 +56,7 @@ INSTALLED_APPS = [
     "apps.imports",
     "apps.reader",
     "apps.api",
+    "apps.coworking",
 ]
 
 MIDDLEWARE = [
@@ -157,10 +159,12 @@ REST_FRAMEWORK = {
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    # Un changement de mot de passe invalide les jetons déjà émis.
+    "CHECK_REVOKE_TOKEN": True,
 }
 
 SPECTACULAR_SETTINGS = {
-    "TITLE": "API de la plateforme bibliothèques",
+    "TITLE": "API de la plateforme multi-activités",
     "DESCRIPTION": "API utilisée par le logiciel de bureau (staff) et l'application mobile (lecteurs).",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,

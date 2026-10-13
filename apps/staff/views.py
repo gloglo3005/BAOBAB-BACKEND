@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth import logout
 from django.contrib.auth.views import LoginView, PasswordChangeView
+from apps.accounts.login_limits import StaffLoginForm
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
@@ -92,6 +93,7 @@ def _error_text(error):
 
 class StaffLoginView(LoginView):
     template_name = "staff/login.html"
+    authentication_form = StaffLoginForm
     redirect_authenticated_user = True
 
     def get_default_redirect_url(self):
