@@ -1,0 +1,41 @@
+{% extends "staff/base.html" %}
+{% block title %}Clients coworking{% endblock %}
+{% block content %}
+<div class="title-row">
+  <h1>Clients coworking</h1>
+  <a class="btn" href="{% url 'staff:cw_customer_new' %}">Nouveau client</a>
+</div>
+<form class="filters" method="get" action="{% url 'staff:cw_customers' %}" role="search">
+  <input type="search" name="q" value="{{ q }}" placeholder="Numéro, nom, téléphone, email" aria-label="Rechercher un client" autofocus>
+  <select name="state" aria-label="État">
+    <option value="">Tous</option>
+    <option value="ACTIVE"{% if state == "ACTIVE" %} selected{% endif %}>Actifs</option>
+    <option value="SUSPENDED"{% if state == "SUSPENDED" %} selected{% endif %}>Suspendus</option>
+  </select>
+  <button class="btn btn-secondary" type="submit">Chercher</button>
+</form>
+{% if page.object_list %}
+<div class="table-wrap">
+<table class="table">
+  <thead><tr><th>N°</th><th>Nom</th><th>Téléphone</th><th>Statut</th><th></th></tr></thead>
+  <tbody>
+  {% for customer in page.object_list %}
+    <tr>
+      <td><span class="code">{{ customer.customer_number }}</span></td>
+      <td><a href="{% url 'staff:cw_customer_detail' customer.pk %}">{{ customer.first_name }} {{ customer.last_name }}</a></td>
+      <td>{{ customer.phone|default:"-" }}</td>
+      <td>
+        {% if customer.status == "SUSPENDED" %}<span class="badge s-suspended">Suspendu</span>{% else %}<span class="badge s-available">Actif</span>{% endif %}
+        {% if customer.has_open_session %}<span class="badge s-open">En session</span>{% endif %}
+      </td>
+      <td><a class="btn btn-small btn-secondary" href="{% url 'staff:cw_customer_detail' customer.pk %}">Fiche</a></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% include "staff/_pagination.html" %}
+{% else %}
+<p class="hint">{% if q or state %}Aucun client ne correspond à cette recherche.{% else %}Aucun client pour l'instant. Créez le premier avec « Nouveau client ».{% endif %}</p>
+{% endif %}
+{% endblock %}

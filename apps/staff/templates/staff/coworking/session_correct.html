@@ -1,0 +1,22 @@
+{% extends "staff/base.html" %}
+{% block title %}Corriger la session{% endblock %}
+{% block content %}
+<section class="narrow">
+  <h1>Corriger la session</h1>
+  <dl class="facts">
+    <div><dt>Client</dt><dd>{{ session.customer.first_name }} {{ session.customer.last_name }} <span class="code">{{ session.customer.customer_number }}</span></dd></div>
+    <div><dt>Ressource</dt><dd><span class="code">{{ session.resource.code }}</span> {{ session.resource.name }}</dd></div>
+    <div><dt>Durée actuelle</dt><dd>{{ duration }}</dd></div>
+    {% if session.status == "CLOSED" %}<div><dt>Montant dû actuel</dt><dd>{{ session.amount|floatformat:"0g" }} XOF</dd></div>{% endif %}
+  </dl>
+  <p class="hint">Pour un oubli de sortie, enregistrez d'abord la sortie sur la session, puis corrigez l'heure. Une correction n'efface rien : les valeurs d'avant, le motif et l'auteur sont conservés dans le journal.</p>
+  <form method="post" class="stack">{% csrf_token %}
+    {% for error in form.non_field_errors %}<p class="msg msg-error">{{ error }}</p>{% endfor %}
+    {% for field in form %}{% include "staff/_field.html" %}{% endfor %}
+    <div class="actions-row">
+      <button class="btn btn-large" type="submit">Enregistrer la correction</button>
+      <a class="btn btn-large btn-secondary" href="{% url 'staff:cw_session_detail' session.pk %}">Annuler</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

@@ -90,3 +90,19 @@ def library_required(view):
         return view(request, *args, **kwargs)
 
     return wrapper
+
+
+def coworking_required(view):
+    """En plus : le module coworking doit être activé pour la structure."""
+
+    @staff_required
+    @wraps(view)
+    def wrapper(request, *args, **kwargs):
+        if not request.organization.coworking_module:
+            return _forbidden(
+                request,
+                "Le module coworking n'est pas activé pour cette structure.",
+            )
+        return view(request, *args, **kwargs)
+
+    return wrapper

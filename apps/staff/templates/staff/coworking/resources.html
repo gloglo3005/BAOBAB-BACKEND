@@ -1,0 +1,48 @@
+{% extends "staff/base.html" %}
+{% block title %}Ressources{% endblock %}
+{% block content %}
+<div class="title-row">
+  <h1>Ressources</h1>
+  <a class="btn" href="{% url 'staff:cw_resource_new' %}">Nouvelle ressource</a>
+</div>
+<form class="filters" method="get" action="{% url 'staff:cw_resources' %}" role="search">
+  <input type="search" name="q" value="{{ q }}" placeholder="Code ou nom" aria-label="Rechercher une ressource">
+  <select name="zone" aria-label="Zone">
+    <option value="">Toutes les zones</option>
+    {% for z in zones %}<option value="{{ z.pk }}"{% if zone == z.pk|stringformat:"s" %} selected{% endif %}>{{ z.name }}</option>{% endfor %}
+  </select>
+  <select name="type" aria-label="Type">
+    <option value="">Tous les types</option>
+    {% for value, label in types %}<option value="{{ value }}"{% if value == kind %} selected{% endif %}>{{ label }}</option>{% endfor %}
+  </select>
+  <select name="state" aria-label="État">
+    <option value="">Actives et désactivées</option>
+    <option value="active"{% if state == "active" %} selected{% endif %}>Actives</option>
+    <option value="inactive"{% if state == "inactive" %} selected{% endif %}>Désactivées</option>
+  </select>
+  <button class="btn btn-secondary" type="submit">Filtrer</button>
+</form>
+{% if page.object_list %}
+<div class="table-wrap">
+<table class="table">
+  <thead><tr><th>Code</th><th>Nom</th><th>Zone</th><th>Type</th><th>Capacité</th><th>Statut</th><th></th></tr></thead>
+  <tbody>
+  {% for resource in page.object_list %}
+    <tr>
+      <td><span class="code">{{ resource.code }}</span></td>
+      <td><a href="{% url 'staff:cw_resource_edit' resource.pk %}">{{ resource.name }}</a></td>
+      <td>{{ resource.zone.name }}{% if not resource.zone.active %} <span class="badge s-unavailable">zone désactivée</span>{% endif %}</td>
+      <td>{{ resource.get_resource_type_display }}</td>
+      <td>{{ resource.capacity }}</td>
+      <td>{% if resource.active %}<span class="badge s-available">Active</span>{% else %}<span class="badge s-unavailable">Désactivée</span>{% endif %}</td>
+      <td><a class="btn btn-small btn-secondary" href="{% url 'staff:cw_resource_edit' resource.pk %}">Modifier</a></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% include "staff/_pagination.html" %}
+{% else %}
+<p class="hint">{% if q or zone or kind or state %}Aucune ressource ne correspond à ces filtres.{% else %}Aucune ressource pour l'instant. Créez d'abord une zone, puis « Nouvelle ressource ».{% endif %}</p>
+{% endif %}
+{% endblock %}

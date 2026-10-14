@@ -1,0 +1,40 @@
+{% extends "staff/base.html" %}
+{% block title %}Tarifs{% endblock %}
+{% block content %}
+<div class="title-row">
+  <h1>Tarifs</h1>
+  <a class="btn" href="{% url 'staff:cw_rate_new' %}">Nouveau tarif</a>
+</div>
+{% if without_rate %}
+<p class="notice">{{ without_rate }} ressource{{ without_rate|pluralize }} active{{ without_rate|pluralize }} sans tarif : {{ without_rate|pluralize:"son,leur" }} utilisation sera comptée 0 XOF.</p>
+{% endif %}
+<form class="filters" method="get" action="{% url 'staff:cw_rates' %}">
+  <select name="state" aria-label="État">
+    <option value="">Actifs et désactivés</option>
+    <option value="active"{% if state == "active" %} selected{% endif %}>Actifs</option>
+    <option value="inactive"{% if state == "inactive" %} selected{% endif %}>Désactivés</option>
+  </select>
+  <button class="btn btn-secondary" type="submit">Filtrer</button>
+</form>
+{% if rates %}
+<div class="table-wrap">
+<table class="table">
+  <thead><tr><th>S'applique à</th><th>Unité</th><th>Montant</th><th>Validité</th><th>Statut</th><th></th></tr></thead>
+  <tbody>
+  {% for rate in rates %}
+    <tr>
+      <td>{% if rate.resource %}<span class="code">{{ rate.resource.code }}</span> {{ rate.resource.name }}{% else %}Tous les « {{ rate.get_resource_type_display|lower }} »{% endif %}</td>
+      <td>{{ rate.get_unit_display }}</td>
+      <td class="nowrap"><strong>{{ rate.amount|floatformat:"0g" }}</strong> {{ rate.currency }}</td>
+      <td>{% if rate.valid_from or rate.valid_until %}{% if rate.valid_from %}du {{ rate.valid_from|date:"d/m/Y" }}{% endif %} {% if rate.valid_until %}au {{ rate.valid_until|date:"d/m/Y" }}{% endif %}{% else %}sans limite{% endif %}</td>
+      <td>{% if rate.active %}<span class="badge s-available">Actif</span>{% else %}<span class="badge s-unavailable">Désactivé</span>{% endif %}</td>
+      <td><a class="btn btn-small btn-secondary" href="{% url 'staff:cw_rate_edit' rate.pk %}">Modifier</a></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p class="hint">Aucun tarif pour l'instant. Sans tarif, l'utilisation d'une ressource est gratuite (0 XOF).</p>
+{% endif %}
+{% endblock %}

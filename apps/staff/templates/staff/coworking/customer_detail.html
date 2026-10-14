@@ -1,0 +1,104 @@
+{% extends "staff/base.html" %}
+{% block title %}{{ customer.first_name }} {{ customer.last_name }}{% endblock %}
+{% block content %}
+<div class="title-row">
+  <h1>{{ customer.first_name }} {{ customer.last_name }} <span class="code">{{ customer.customer_number }}</span></h1>
+  <div class="actions-row">
+    {% if customer.status == "ACTIVE" and not open_session %}
+    <a class="btn" href="{% url 'staff:cw_reception' %}?customer_q={{ customer.customer_number|urlencode }}">Enregistrer l'arrivée</a>
+    {% endif %}
+    {% if customer.status == "ACTIVE" %}<a class="btn btn-secondary" href="{% url 'staff:cw_reservation_new' %}?customer={{ customer.pk }}">Nouvelle réservation</a>{% endif %}
+    <a class="btn btn-secondary" href="{% url 'staff:cw_customer_edit' customer.pk %}">Modifier</a>
+  </div>
+</div>
+
+<dl class="facts">
+  <div><dt>Statut</dt><dd>{% if customer.status == "SUSPENDED" %}<span class="badge s-suspended">Suspendu</span>{% else %}<span class="badge s-available">Actif</span>{% endif %}</dd></div>
+  <div><dt>Téléphone</dt><dd>{{ customer.phone|default:"-" }}</dd></div>
+  <div><dt>Email</dt><dd>{{ customer.email|default:"-" }}</dd></div>
+  <div><dt>Client depuis</dt><dd>{{ customer.created_at|date:"d/m/Y" }}</dd></div>
+</dl>
+
+{% if unpaid_total %}
+<p class="notice">Reste à payer : <strong>{{ unpaid_total|floatformat:"0g" }} XOF</strong> sur {{ unpaid_count }} session{{ unpaid_count|pluralize }} terminée{{ unpaid_count|pluralize }}. <a href="{% url 'staff:cw_payment_new' %}?customer={{ customer.pk }}">Enregistrer un paiement</a></p>
+{% endif %}
+
+{% if open_session %}
+<h2>Session en cours</h2>
+<p><span class="code">{{ open_session.resource.code }}</span> {{ open_session.resource.name }}, depuis {{ open_session.checked_in_at|date:"H:i" }} ({{ open_session.duration }}).
+<a href="{% url 'staff:cw_session_detail' open_session.pk %}">Voir la session</a></p>
+{% endif %}
+
+<h2>Réservations à venir</h2>
+{% if upcoming %}
+<div class="table-wrap">
+<table class="table">
+  <thead><tr><th>Ressource</th><th>Début</th><th>Fin</th><th>Montant</th><th></th></tr></thead>
+  <tbody>
+  {% for reservation in upcoming %}
+    <tr>
+      <td><span class="code">{{ reservation.resource.code }}</span> {{ reservation.resource.name }}</td>
+      <td>{{ reservation.starts_at|date:"d/m/Y H:i" }}</td>
+      <td>{{ reservation.ends_at|date:"d/m/Y H:i" }}</td>
+      <td class="nowrap">{{ reservation.quoted_amount|floatformat:"0g" }} XOF</td>
+      <td><a class="btn btn-small btn-secondary" href="{% url 'staff:cw_reservation_detail' reservation.pk %}">Détail</a></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}<p class="hint">Aucune réservation à venir.</p>{% endif %}
+
+<h2>Dernières sessions</h2>
+{% if sessions %}
+<div class="table-wrap">
+<table class="table">
+  <thead><tr><th>Ressource</th><th>Arrivée</th><th>Sortie</th><th>Dû</th><th>Reste</th><th></th></tr></thead>
+  <tbody>
+  {% for item in sessions %}
+    <tr>
+      <td><span class="code">{{ item.resource.code }}</span></td>
+      <td>{{ item.checked_in_at|date:"d/m/Y H:i" }}</td>
+      <td>{{ item.checked_out_at|date:"H:i" }}</td>
+      <td class="nowrap">{{ item.amount|floatformat:"0g" }} XOF</td>
+      <td class="nowrap">{% if item.balance > 0 %}<span class="badge s-overdue">{{ item.balance|floatformat:"0g" }} XOF</span>{% else %}<span class="badge s-available">Soldé</span>{% endif %}</td>
+      <td><a class="btn btn-small btn-secondary" href="{% url 'staff:cw_session_detail' item.pk %}">Détail</a></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}<p class="hint">Aucune session terminée.</p>{% endif %}
+
+<h2>Derniers paiements</h2>
+{% if payments %}
+<div class="table-wrap">
+<table class="table">
+  <thead><tr><th>Reçu</th><th>Date</th><th>Montant</th><th>Moyen</th><th>Statut</th></tr></thead>
+  <tbody>
+  {% for payment in payments %}
+    <tr>
+      <td><a href="{% url 'staff:cw_payment_receipt' payment.pk %}">{{ payment.receipt_number }}</a></td>
+      <td>{{ payment.paid_at|date:"d/m/Y H:i" }}</td>
+      <td class="nowrap">{{ payment.amount|floatformat:"0g" }} {{ payment.currency }}</td>
+      <td>{{ payment.get_method_display }}</td>
+      <td><span class="badge s-{{ payment.status|lower }}">{{ payment.get_status_display }}</span></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}<p class="hint">Aucun paiement.</p>{% endif %}
+
+<h2>Statut du client</h2>
+<form method="post" action="{% url 'staff:cw_customer_action' customer.pk %}" class="inline-form">{% csrf_token %}
+  {% if customer.status == "ACTIVE" %}
+  <input type="hidden" name="action" value="suspend">
+  <button class="btn btn-secondary" type="submit">Suspendre ce client</button>
+  <span class="hint">Un client suspendu ne peut plus s'enregistrer à l'accueil.</span>
+  {% else %}
+  <input type="hidden" name="action" value="reactivate">
+  <button class="btn" type="submit">Réactiver ce client</button>
+  {% endif %}
+</form>
+{% endblock %}

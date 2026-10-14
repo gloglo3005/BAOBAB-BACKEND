@@ -1,0 +1,47 @@
+{% extends "staff/base.html" %}
+{% block title %}Paiements coworking{% endblock %}
+{% block content %}
+<div class="title-row">
+  <h1>Paiements</h1>
+  <div class="actions-row">
+    <a class="btn" href="{% url 'staff:cw_payment_new' %}">Enregistrer un paiement</a>
+    <a class="btn btn-secondary" href="{% url 'staff:cw_unpaid' %}">À encaisser{% if unpaid.count %} ({{ unpaid.count }}){% endif %}</a>
+  </div>
+</div>
+<form class="filters" method="get" action="{% url 'staff:cw_payments' %}" role="search">
+  <input type="search" name="q" value="{{ q }}" placeholder="N° de reçu ou client" aria-label="Rechercher un paiement">
+  <select name="method" aria-label="Moyen">
+    <option value="">Tous les moyens</option>
+    {% for value, label in methods %}<option value="{{ value }}"{% if value == method %} selected{% endif %}>{{ label }}</option>{% endfor %}
+  </select>
+  <select name="state" aria-label="Statut">
+    <option value="">Tous les statuts</option>
+    <option value="RECORDED"{% if state == "RECORDED" %} selected{% endif %}>Enregistrés</option>
+    <option value="VOIDED"{% if state == "VOIDED" %} selected{% endif %}>Annulés</option>
+  </select>
+  <button class="btn btn-secondary" type="submit">Filtrer</button>
+</form>
+{% if page.object_list %}
+<div class="table-wrap">
+<table class="table">
+  <thead><tr><th>Reçu</th><th>Date</th><th>Client</th><th>Montant</th><th>Moyen</th><th>Statut</th><th>Par</th></tr></thead>
+  <tbody>
+  {% for payment in page.object_list %}
+    <tr>
+      <td><a href="{% url 'staff:cw_payment_receipt' payment.pk %}">{{ payment.receipt_number }}</a></td>
+      <td>{{ payment.paid_at|date:"d/m/Y H:i" }}</td>
+      <td><a href="{% url 'staff:cw_customer_detail' payment.customer_id %}">{{ payment.customer.first_name }} {{ payment.customer.last_name }}</a></td>
+      <td class="nowrap"><strong>{{ payment.amount|floatformat:"0g" }}</strong> {{ payment.currency }}</td>
+      <td>{{ payment.get_method_display }}</td>
+      <td><span class="badge s-{{ payment.status|lower }}">{{ payment.get_status_display }}</span></td>
+      <td>{{ payment.recorded_by.get_full_name|default:payment.recorded_by.email }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% include "staff/_pagination.html" %}
+{% else %}
+<p class="hint">{% if q or state or method %}Aucun paiement ne correspond à ces filtres.{% else %}Aucun paiement pour l'instant.{% endif %}</p>
+{% endif %}
+{% endblock %}

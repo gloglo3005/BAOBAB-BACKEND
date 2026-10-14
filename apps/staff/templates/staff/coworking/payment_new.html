@@ -1,0 +1,45 @@
+{% extends "staff/base.html" %}
+{% block title %}Enregistrer un paiement{% endblock %}
+{% block content %}
+<section class="narrow">
+  <h1>Enregistrer un paiement</h1>
+  <p>Client : <strong>{{ customer.first_name }} {{ customer.last_name }}</strong> <span class="code">{{ customer.customer_number }}</span></p>
+  <form method="post" class="stack" id="payment-form">{% csrf_token %}
+    {% for error in form.non_field_errors %}<p class="msg msg-error">{{ error }}</p>{% endfor %}
+
+    <div class="field">
+      <label for="id_session">{{ form.session.label }}</label>
+      <select name="session" id="id_session">
+        <option value="">Aucune (acompte libre)</option>
+        {% for item in unpaid_sessions %}
+        <option value="{{ item.pk }}" data-balance="{{ item.balance }}"{% if form.session.value|stringformat:"s" == item.pk|stringformat:"s" %} selected{% endif %}>{{ item.resource.code }} · {{ item.checked_out_at|date:"d/m H:i" }} · reste {{ item.balance|floatformat:"0g" }} XOF</option>
+        {% endfor %}
+      </select>
+      {% for error in form.session.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+      {% if not unpaid_sessions %}<div class="help">Ce client n'a aucune session terminée à solder.</div>{% endif %}
+    </div>
+
+    {% include "staff/_field.html" with field=form.amount %}
+    {% include "staff/_field.html" with field=form.method %}
+    {% include "staff/_field.html" with field=form.note %}
+
+    <div class="actions-row">
+      <button class="btn btn-large" type="submit">Enregistrer le paiement</button>
+      <a class="btn btn-large btn-secondary" href="{% url 'staff:cw_customer_detail' customer.pk %}">Annuler</a>
+    </div>
+  </form>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+  // Choisir une session propose son solde comme montant (modifiable pour un paiement partiel).
+  var select = document.getElementById("id_session");
+  var amount = document.getElementById("id_amount");
+  if (select && amount) {
+    select.addEventListener("change", function () {
+      var option = select.options[select.selectedIndex];
+      amount.value = option.dataset.balance || "";
+    });
+  }
+</script>
+{% endblock %}

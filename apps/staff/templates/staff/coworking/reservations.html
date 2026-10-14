@@ -1,0 +1,47 @@
+{% extends "staff/base.html" %}
+{% block title %}Réservations coworking{% endblock %}
+{% block content %}
+<div class="title-row">
+  <h1>Réservations</h1>
+  <div class="actions-row">
+    {% if profile.booking_enabled %}<a class="btn" href="{% url 'staff:cw_reservation_new' %}">Nouvelle réservation</a>{% endif %}
+    <a class="btn btn-secondary" href="{% url 'staff:cw_planning' %}">Planning</a>
+  </div>
+</div>
+{% if to_decide and state != "TO_DECIDE" %}
+<p class="notice"><a href="{% url 'staff:cw_reservations' %}?state=TO_DECIDE"><strong>{{ to_decide }}</strong> absence{{ to_decide|pluralize }} à décider</a> (délai de grâce écoulé, aucune arrivée).</p>
+{% endif %}
+<form class="filters" method="get" action="{% url 'staff:cw_reservations' %}" role="search">
+  <input type="search" name="q" value="{{ q }}" placeholder="Client ou ressource" aria-label="Rechercher une réservation">
+  <select name="state" aria-label="Statut">
+    <option value="">Tous les statuts</option>
+    {% for value, label in statuses %}<option value="{{ value }}"{% if value == state %} selected{% endif %}>{{ label }}</option>{% endfor %}
+    <option value="TO_DECIDE"{% if state == "TO_DECIDE" %} selected{% endif %}>Absence à décider</option>
+  </select>
+  <input type="date" name="from" value="{{ date_from|date:'Y-m-d' }}" aria-label="À partir du">
+  <input type="date" name="to" value="{{ date_to|date:'Y-m-d' }}" aria-label="Jusqu'au">
+  <button class="btn btn-secondary" type="submit">Filtrer</button>
+</form>
+{% if page.object_list %}
+<div class="table-wrap">
+<table class="table">
+  <thead><tr><th>Client</th><th>Ressource</th><th>Créneau</th><th>Estimé</th><th>Statut</th><th></th></tr></thead>
+  <tbody>
+  {% for reservation in page.object_list %}
+    <tr>
+      <td><a href="{% url 'staff:cw_customer_detail' reservation.customer_id %}">{{ reservation.customer.first_name }} {{ reservation.customer.last_name }}</a> <span class="code">{{ reservation.customer.customer_number }}</span></td>
+      <td><span class="code">{{ reservation.resource.code }}</span> {{ reservation.resource.name }}</td>
+      <td class="nowrap">{{ reservation.starts_at|date:"d/m/Y H:i" }} - {{ reservation.ends_at|date:"H:i" }}</td>
+      <td class="nowrap">{{ reservation.quoted_amount|floatformat:"0g" }} XOF</td>
+      <td><span class="badge s-{{ reservation.status|lower }}">{{ reservation.get_status_display }}</span>{% if reservation.to_decide %} <span class="badge s-overdue">Absence à décider</span>{% endif %}</td>
+      <td><a class="btn btn-small btn-secondary" href="{% url 'staff:cw_reservation_detail' reservation.pk %}">Détail</a></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% include "staff/_pagination.html" %}
+{% else %}
+<p class="hint">{% if q or state or date_from or date_to %}Aucune réservation ne correspond à ces filtres.{% else %}Aucune réservation pour l'instant.{% endif %}</p>
+{% endif %}
+{% endblock %}

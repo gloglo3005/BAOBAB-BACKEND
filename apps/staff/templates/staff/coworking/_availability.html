@@ -1,0 +1,16 @@
+{% if not panel %}
+  <p class="hint">Choisissez le jour, l'heure de début et l'heure de fin : les ressources libres s'affichent ici avec leur montant estimé.</p>
+{% elif panel.problem %}
+  <p class="msg msg-warning">{{ panel.problem }}</p>
+{% else %}
+  {% for row in panel.rows %}
+  <label class="choice">
+    <input type="radio" name="resource_id" value="{{ row.resource.pk }}"{% if row.selected %} checked{% endif %}>
+    <span class="choice-main"><span class="code">{{ row.resource.code }}</span> <strong>{{ row.resource.name }}</strong></span>
+    <span class="choice-meta"><span>{{ row.resource.zone.name }}</span><span>{{ row.resource.get_resource_type_display }}</span><span><strong>{% if row.rate %}{{ row.amount|floatformat:"0g" }} XOF{% else %}Gratuit (aucun tarif){% endif %}</strong></span></span>
+  </label>
+  {% empty %}
+  <p class="hint">Aucune ressource libre sur cette période.</p>
+  {% endfor %}
+  {% if panel.rows %}<p class="hint">Le montant est une estimation au tarif en vigueur ; il est recopié sur la réservation.</p>{% endif %}
+{% endif %}

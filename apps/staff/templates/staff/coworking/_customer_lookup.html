@@ -1,0 +1,14 @@
+{% if panel.hint and not panel.rows %}
+  <p class="hint">{{ panel.hint }}{% if panel.query and panel.hint == "Aucun client trouvé." %} <a href="{% url 'staff:cw_customer_new' %}">Créer ce client</a>.{% endif %}</p>
+{% else %}
+  {% for row in panel.rows %}
+    {% if panel.single %}<input type="hidden" name="customer_id" value="{{ row.customer.pk }}">{% endif %}
+    <label class="choice{% if not row.selectable %} is-disabled{% endif %}">
+      {% if not panel.single %}<input type="radio" name="customer_id" value="{{ row.customer.pk }}"{% if not row.selectable %} disabled{% endif %}>{% endif %}
+      <span class="choice-main"><strong>{{ row.customer.first_name }} {{ row.customer.last_name }}</strong> <span class="code">{{ row.customer.customer_number }}</span></span>
+      <span class="choice-meta">{% if row.customer.phone %}<span>{{ row.customer.phone }}</span>{% endif %}</span>
+      {% if panel.single %}<span class="badge s-accepted">Sélectionné</span>{% endif %}
+      {% if not row.selectable %}<span class="badge s-suspended">{{ row.reason }}</span>{% endif %}
+    </label>
+  {% endfor %}
+{% endif %}

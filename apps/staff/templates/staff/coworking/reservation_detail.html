@@ -1,0 +1,99 @@
+{% extends "staff/base.html" %}
+{% block title %}Réservation {{ reservation.resource.code }}{% endblock %}
+{% block content %}
+<div class="title-row">
+  <h1>Réservation <span class="code">{{ reservation.resource.code }}</span> <span class="badge s-{{ reservation.status|lower }}">{{ reservation.get_status_display }}</span></h1>
+  <div class="actions-row">
+    <a class="btn btn-secondary" href="{% url 'staff:cw_planning' %}?date={{ reservation.starts_at|date:'Y-m-d' }}">Voir au planning</a>
+    <a class="btn btn-secondary" href="{% url 'staff:cw_reservations' %}">Toutes les réservations</a>
+  </div>
+</div>
+
+{% if reservation.status == "CANCELLED" %}
+<p class="void-banner">RÉSERVATION ANNULÉE le {{ reservation.cancelled_at|date:"d/m/Y à H:i" }}{% if reservation.cancelled_by %} par {{ reservation.cancelled_by.get_full_name|default:reservation.cancelled_by.email }}{% endif %}{% if reservation.cancel_reason %} : {{ reservation.cancel_reason }}{% endif %}</p>
+{% endif %}
+
+<dl class="facts">
+  <div><dt>Client</dt><dd><a href="{% url 'staff:cw_customer_detail' reservation.customer_id %}">{{ reservation.customer.first_name }} {{ reservation.customer.last_name }}</a> <span class="code">{{ reservation.customer.customer_number }}</span></dd></div>
+  <div><dt>Ressource</dt><dd><span class="code">{{ reservation.resource.code }}</span> {{ reservation.resource.name }}</dd></div>
+  <div><dt>Début</dt><dd>{{ reservation.starts_at|date:"d/m/Y à H:i" }}</dd></div>
+  <div><dt>Fin</dt><dd>{{ reservation.ends_at|date:"d/m/Y à H:i" }}</dd></div>
+  <div><dt>Montant estimé</dt><dd>{{ reservation.quoted_amount|floatformat:"0g" }} {{ reservation.currency }}{% if reservation.rate %} <span class="hint">(tarif : {{ reservation.rate }})</span>{% endif %}</dd></div>
+  <div><dt>Enregistrée par</dt><dd>{{ reservation.created_by.get_full_name|default:reservation.created_by.email }}, le {{ reservation.created_at|date:"d/m/Y à H:i" }}</dd></div>
+  {% if reservation.notes %}<div><dt>Note</dt><dd>{{ reservation.notes }}</dd></div>{% endif %}
+</dl>
+
+{% if reservation.status == "CONFIRMED" %}
+  {% if can_check_in %}
+  <form method="post" action="{% url 'staff:cw_check_in' %}" class="inline-form">{% csrf_token %}
+    <input type="hidden" name="reservation_id" value="{{ reservation.pk }}">
+    <button class="btn btn-large" type="submit">Enregistrer l'arrivée</button>
+  </form>
+  {% elif can_cancel or waiting_grace %}
+  <p class="hint">L'arrivée peut être enregistrée à partir de {{ profile.check_in_early_minutes }} minutes avant le début.</p>
+  {% endif %}
+
+  {% if can_no_show %}
+  <form method="post" action="{% url 'staff:cw_reservation_no_show' reservation.pk %}" class="stack" onsubmit="return confirm('Marquer ce client absent ?');">{% csrf_token %}
+    <h2>Absence</h2>
+    <p class="hint">Le délai de grâce ({{ profile.no_show_grace_minutes }} min) est écoulé et aucune arrivée n'est enregistrée.</p>
+    <button class="btn btn-secondary" type="submit">Marquer absent</button>
+  </form>
+  {% elif waiting_grace %}
+  <p class="hint">L'absence pourra être enregistrée à partir de {{ no_show_from|date:"H:i" }} (délai de grâce de {{ profile.no_show_grace_minutes }} min).</p>
+  {% endif %}
+
+  {% if can_cancel %}
+  <form method="post" action="{% url 'staff:cw_reservation_cancel' reservation.pk %}" class="stack" onsubmit="return confirm('Annuler cette réservation ?');">{% csrf_token %}
+    <h2>Annuler la réservation</h2>
+    {% if late %}<p class="msg msg-warning">Le délai d'annulation ({{ profile.cancellation_deadline_hours }} h avant le début) est dépassé : l'annulation reste possible, elle sera notée comme tardive dans le journal.</p>{% endif %}
+    <div class="field">
+      <label for="reason">Motif (obligatoire)</label>
+      <input id="reason" name="reason" type="text" maxlength="200" required>
+      <div class="help">Une réservation n'est jamais supprimée : elle est marquée annulée et le motif est conservé.</div>
+    </div>
+    <button class="btn btn-secondary" type="submit">Annuler la réservation</button>
+  </form>
+  {% endif %}
+{% endif %}
+
+{% if sessions %}
+<h2>Présence</h2>
+<div class="table-wrap">
+<table class="table">
+  <thead><tr><th>Arrivée</th><th>Sortie</th><th>Statut</th><th></th></tr></thead>
+  <tbody>
+  {% for item in sessions %}
+    <tr>
+      <td>{{ item.checked_in_at|date:"d/m/Y H:i" }}</td>
+      <td>{% if item.checked_out_at %}{{ item.checked_out_at|date:"d/m/Y H:i" }}{% else %}-{% endif %}</td>
+      <td><span class="badge s-{{ item.status|lower }}">{{ item.get_status_display }}</span></td>
+      <td><a class="btn btn-small btn-secondary" href="{% url 'staff:cw_session_detail' item.pk %}">Session</a></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+
+{% if payments %}
+<h2>Paiements sur la réservation</h2>
+<p class="hint">Déjà payé : {{ paid|floatformat:"0g" }} XOF{% if reservation.status == "CONFIRMED" or reservation.status == "COMPLETED" %}, reste {{ balance|floatformat:"0g" }} XOF sur le montant estimé{% endif %}.</p>
+<div class="table-wrap">
+<table class="table">
+  <thead><tr><th>Reçu</th><th>Date</th><th>Montant</th><th>Moyen</th><th>Statut</th></tr></thead>
+  <tbody>
+  {% for payment in payments %}
+    <tr>
+      <td><a href="{% url 'staff:cw_payment_receipt' payment.pk %}">{{ payment.receipt_number }}</a></td>
+      <td>{{ payment.paid_at|date:"d/m/Y H:i" }}</td>
+      <td class="nowrap">{{ payment.amount|floatformat:"0g" }} {{ payment.currency }}</td>
+      <td>{{ payment.get_method_display }}</td>
+      <td><span class="badge s-{{ payment.status|lower }}">{{ payment.get_status_display }}</span></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+{% endblock %}

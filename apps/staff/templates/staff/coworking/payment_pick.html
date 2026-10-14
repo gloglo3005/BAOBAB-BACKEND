@@ -1,0 +1,15 @@
+{% extends "staff/base.html" %}
+{% block title %}Enregistrer un paiement{% endblock %}
+{% block content %}
+<section class="narrow wide">
+  <h1>Enregistrer un paiement</h1>
+  <p class="hint">Cherchez le client. Pour encaisser une session précise, passez plutôt par <a href="{% url 'staff:cw_unpaid' %}">Sessions à encaisser</a>.</p>
+  <div class="step">
+    <label for="customer_q">Client</label>
+    <input id="customer_q" name="customer_q" class="scan" autocomplete="off" autofocus
+           placeholder="Numéro, nom ou téléphone"
+           hx-get="{% url 'staff:cw_payment_customer_lookup' %}" hx-trigger="input changed delay:300ms" hx-target="#customer-panel">
+    <div id="customer-panel" aria-live="polite"><p class="hint">Tapez au moins 2 caractères : numéro, nom, téléphone ou email.</p></div>
+  </div>
+</section>
+{% endblock %}

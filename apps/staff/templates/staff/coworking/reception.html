@@ -1,0 +1,100 @@
+{% extends "staff/base.html" %}
+{% block title %}Accueil coworking{% endblock %}
+{% block content %}
+<h1>Accueil</h1>
+
+{% if to_welcome %}
+<h2>Réservations à accueillir</h2>
+<div class="table-wrap">
+<table class="table">
+  <thead><tr><th>Client</th><th>Ressource</th><th>Créneau</th><th></th></tr></thead>
+  <tbody>
+  {% for reservation in to_welcome %}
+    <tr>
+      <td><a href="{% url 'staff:cw_customer_detail' reservation.customer_id %}">{{ reservation.customer.first_name }} {{ reservation.customer.last_name }}</a> <span class="code">{{ reservation.customer.customer_number }}</span></td>
+      <td><span class="code">{{ reservation.resource.code }}</span> {{ reservation.resource.name }}</td>
+      <td>{{ reservation.starts_at|date:"H:i" }} - {{ reservation.ends_at|date:"H:i" }}</td>
+      <td>
+        <form method="post" action="{% url 'staff:cw_check_in' %}" class="inline-form">{% csrf_token %}
+          <input type="hidden" name="reservation_id" value="{{ reservation.pk }}">
+          <button class="btn btn-small" type="submit">Arrivée</button>
+        </form>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+
+<h2>Arrivée sans réservation</h2>
+{% if not profile.walk_in_enabled %}
+<p class="hint">L'accueil sans réservation est désactivé dans les <a href="{% url 'staff:cw_rules' %}">règles de fonctionnement</a>.</p>
+{% else %}
+<form method="post" action="{% url 'staff:cw_check_in' %}" class="stack" id="checkin-form">{% csrf_token %}
+  <section class="step">
+    <label for="customer_q">Client</label>
+    <input id="customer_q" name="customer_q" class="scan" value="{{ customer_q }}" autocomplete="off"
+           placeholder="Numéro, nom ou téléphone" {% if not customer_q %}autofocus{% endif %}
+           hx-get="{% url 'staff:cw_customer_lookup' %}" hx-trigger="input changed delay:300ms" hx-target="#customer-panel">
+    <div id="customer-panel" aria-live="polite">{% if panel %}{% include "staff/coworking/_customer_lookup.html" %}{% endif %}</div>
+  </section>
+
+  <section class="step">
+    <label>Ressource libre maintenant</label>
+    {% for resource in walk_in_resources %}
+    <label class="choice">
+      <input type="radio" name="resource_id" value="{{ resource.pk }}">
+      <span class="choice-main"><span class="code">{{ resource.code }}</span> <strong>{{ resource.name }}</strong></span>
+      <span class="choice-meta"><span>{{ resource.zone.name }}</span><span>{{ resource.get_resource_type_display }}</span></span>
+    </label>
+    {% empty %}
+    <p class="hint">Aucune ressource libre en ce moment.</p>
+    {% endfor %}
+  </section>
+  <button class="btn btn-large" id="checkin-submit" type="submit">Enregistrer l'arrivée</button>
+</form>
+{% endif %}
+
+<h2>Sessions en cours</h2>
+{% if open_sessions %}
+<div class="table-wrap">
+<table class="table">
+  <thead><tr><th>Client</th><th>Ressource</th><th>Depuis</th><th>Durée</th><th>À ce jour</th><th></th></tr></thead>
+  <tbody>
+  {% for item in open_sessions %}
+    <tr>
+      <td><a href="{% url 'staff:cw_customer_detail' item.customer_id %}">{{ item.customer.first_name }} {{ item.customer.last_name }}</a></td>
+      <td><span class="code">{{ item.resource.code }}</span> {{ item.resource.name }}</td>
+      <td>{{ item.checked_in_at|date:"H:i" }}</td>
+      <td>{{ item.duration }}</td>
+      <td class="nowrap">{{ item.estimate|floatformat:"0g" }} XOF</td>
+      <td>
+        <form method="post" action="{% url 'staff:cw_check_out' item.pk %}" class="inline-form">{% csrf_token %}
+          <button class="btn btn-small" type="submit">Sortie</button>
+        </form>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<p class="hint">« À ce jour » est une estimation : le montant exact est fixé à la sortie.</p>
+{% else %}
+<p class="hint">Personne n'est en session pour l'instant.</p>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+  var input = document.getElementById("customer_q");
+  if (input) {
+    // Entrée lance la recherche au lieu d'envoyer le formulaire.
+    input.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        if (window.htmx) { htmx.trigger(input, "input"); }
+      }
+    });
+  }
+</script>
+{% endblock %}

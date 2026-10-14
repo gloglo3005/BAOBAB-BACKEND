@@ -1,0 +1,48 @@
+{% extends "staff/base.html" %}
+{% block title %}Historique des sessions{% endblock %}
+{% block content %}
+<div class="title-row">
+  <h1>Historique des sessions</h1>
+  <div class="actions-row">
+    <a class="btn btn-secondary" href="{% url 'staff:cw_reception' %}">Accueil</a>
+    <a class="btn btn-secondary" href="{% url 'staff:cw_planning' %}">Planning</a>
+  </div>
+</div>
+<form class="filters" method="get" action="{% url 'staff:cw_sessions' %}" role="search">
+  <input type="search" name="q" value="{{ q }}" placeholder="Client ou ressource" aria-label="Rechercher une session">
+  <select name="state" aria-label="Statut">
+    <option value="">Tous les statuts</option>
+    <option value="OPEN"{% if state == "OPEN" %} selected{% endif %}>En cours</option>
+    <option value="CLOSED"{% if state == "CLOSED" %} selected{% endif %}>Terminées</option>
+  </select>
+  <input type="date" name="from" value="{{ date_from|date:'Y-m-d' }}" aria-label="À partir du">
+  <input type="date" name="to" value="{{ date_to|date:'Y-m-d' }}" aria-label="Jusqu'au">
+  <label class="inline"><input type="checkbox" name="unpaid" value="1"{% if only_unpaid %} checked{% endif %}> Reste à payer</label>
+  <label class="inline"><input type="checkbox" name="corrected" value="1"{% if only_corrected %} checked{% endif %}> Corrigées</label>
+  <button class="btn btn-secondary" type="submit">Filtrer</button>
+</form>
+{% if page.object_list %}
+<div class="table-wrap">
+<table class="table">
+  <thead><tr><th>Client</th><th>Ressource</th><th>Arrivée</th><th>Sortie</th><th>Durée</th><th>Dû</th><th>Reste</th><th></th></tr></thead>
+  <tbody>
+  {% for item in page.object_list %}
+    <tr>
+      <td><a href="{% url 'staff:cw_customer_detail' item.customer_id %}">{{ item.customer.first_name }} {{ item.customer.last_name }}</a></td>
+      <td><span class="code">{{ item.resource.code }}</span></td>
+      <td class="nowrap">{{ item.checked_in_at|date:"d/m/Y H:i" }}</td>
+      <td class="nowrap">{% if item.checked_out_at %}{{ item.checked_out_at|date:"d/m/Y H:i" }}{% else %}<span class="badge s-open">En cours</span>{% endif %}</td>
+      <td class="nowrap">{{ item.duration }}</td>
+      <td class="nowrap">{% if item.status == "CLOSED" %}{{ item.amount|floatformat:"0g" }} XOF{% else %}-{% endif %}</td>
+      <td class="nowrap">{% if item.status == "CLOSED" %}{% if item.balance > 0 %}<span class="badge s-overdue">{{ item.balance|floatformat:"0g" }} XOF</span>{% else %}<span class="badge s-available">Soldé</span>{% endif %}{% else %}-{% endif %}</td>
+      <td class="nowrap">{% if item.corrected %}<span class="badge s-suspended">Corrigée</span> {% endif %}<a class="btn btn-small btn-secondary" href="{% url 'staff:cw_session_detail' item.pk %}">Détail</a></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% include "staff/_pagination.html" %}
+{% else %}
+<p class="hint">{% if q or state or date_from or date_to or only_unpaid or only_corrected %}Aucune session ne correspond à ces filtres.{% else %}Aucune session pour l'instant.{% endif %}</p>
+{% endif %}
+{% endblock %}

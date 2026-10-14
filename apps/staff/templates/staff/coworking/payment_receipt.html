@@ -1,0 +1,38 @@
+{% extends "staff/base.html" %}
+{% block title %}Reçu {{ payment.receipt_number }}{% endblock %}
+{% block content %}
+<section class="receipt">
+  <h1>Reçu {{ payment.receipt_number }}</h1>
+  {% if payment.status == "VOIDED" %}
+  <p class="void-banner">PAIEMENT ANNULÉ le {{ payment.voided_at|date:"d/m/Y à H:i" }}{% if payment.void_reason %} : {{ payment.void_reason }}{% endif %}</p>
+  {% endif %}
+  <p class="receipt-due"><strong>{{ payment.amount|floatformat:"0g" }} {{ payment.currency }}</strong> reçus</p>
+  <dl class="facts">
+    <div><dt>Client</dt><dd>{{ payment.customer.first_name }} {{ payment.customer.last_name }} <span class="code">{{ payment.customer.customer_number }}</span></dd></div>
+    <div><dt>Date</dt><dd>{{ payment.paid_at|date:"d/m/Y à H:i" }}</dd></div>
+    <div><dt>Moyen</dt><dd>{{ payment.get_method_display }}</dd></div>
+    <div><dt>Pour</dt><dd>{% if payment.session %}Session sur {{ payment.session.resource.code }} du {{ payment.session.checked_in_at|date:"d/m/Y" }}{% elif payment.reservation %}Réservation de {{ payment.reservation.resource.code }} du {{ payment.reservation.starts_at|date:"d/m/Y" }}{% else %}Acompte libre{% endif %}</dd></div>
+    {% if target_balance is not None and payment.status == "RECORDED" %}
+    <div><dt>Reste à payer sur la session</dt><dd>{% if target_balance > 0 %}{{ target_balance|floatformat:"0g" }} {{ payment.currency }}{% else %}Soldé{% endif %}</dd></div>
+    {% endif %}
+    <div><dt>Encaissé par</dt><dd>{{ payment.recorded_by.get_full_name|default:payment.recorded_by.email }}</dd></div>
+    {% if payment.note %}<div><dt>Note</dt><dd>{{ payment.note }}</dd></div>{% endif %}
+  </dl>
+  <div class="actions-row no-print">
+    <button class="btn btn-large" type="button" onclick="window.print()">Imprimer le reçu</button>
+    <a class="btn btn-large btn-secondary" href="{% url 'staff:cw_customer_detail' payment.customer_id %}">Fiche client</a>
+    <a class="btn btn-large btn-secondary" href="{% url 'staff:cw_payments' %}">Tous les paiements</a>
+  </div>
+  {% if payment.status == "RECORDED" %}
+  <form method="post" action="{% url 'staff:cw_payment_void' payment.pk %}" class="stack no-print" onsubmit="return confirm('Annuler ce paiement ?');">{% csrf_token %}
+    <h2>Annuler ce paiement</h2>
+    <div class="field">
+      <label for="reason">Motif (obligatoire)</label>
+      <input id="reason" name="reason" type="text" maxlength="200" required>
+      <div class="help">Un paiement n'est jamais supprimé : il est marqué annulé et le motif est conservé.</div>
+    </div>
+    <button class="btn btn-secondary" type="submit">Annuler le paiement</button>
+  </form>
+  {% endif %}
+</section>
+{% endblock %}

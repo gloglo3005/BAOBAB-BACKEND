@@ -1,0 +1,78 @@
+{% extends "staff/base.html" %}
+{% block title %}Planning coworking{% endblock %}
+{% block content %}
+<div class="title-row">
+  <h1>Planning du {{ day|date:"l j F Y" }}</h1>
+  <div class="actions-row">
+    {% if profile.booking_enabled %}<a class="btn" href="{% url 'staff:cw_reservation_new' %}?date={{ day|date:'Y-m-d' }}">Nouvelle réservation</a>{% endif %}
+    <a class="btn btn-secondary" href="{% url 'staff:cw_reservations' %}">Toutes les réservations</a>
+    <a class="btn btn-secondary" href="{% url 'staff:cw_sessions' %}">Historique des sessions</a>
+  </div>
+</div>
+
+{% if to_decide %}
+<p class="notice"><a href="{% url 'staff:cw_reservations' %}?state=TO_DECIDE"><strong>{{ to_decide }}</strong> réservation{{ to_decide|pluralize }} sans arrivée dont le délai de grâce est écoulé</a> : absence à décider.</p>
+{% endif %}
+
+<form class="filters" method="get" action="{% url 'staff:cw_planning' %}">
+  <a class="btn btn-small btn-secondary" href="?date={{ previous_day|date:'Y-m-d' }}{% if zone_id %}&zone={{ zone_id }}{% endif %}{% if resource_type %}&type={{ resource_type }}{% endif %}" aria-label="Jour précédent">&larr;</a>
+  <input type="date" name="date" value="{{ day|date:'Y-m-d' }}" aria-label="Jour">
+  <a class="btn btn-small btn-secondary" href="?date={{ next_day|date:'Y-m-d' }}{% if zone_id %}&zone={{ zone_id }}{% endif %}{% if resource_type %}&type={{ resource_type }}{% endif %}" aria-label="Jour suivant">&rarr;</a>
+  <select name="zone" aria-label="Zone">
+    <option value="">Toutes les zones</option>
+    {% for zone in zones %}<option value="{{ zone.pk }}"{% if zone.pk == zone_id %} selected{% endif %}>{{ zone.name }}</option>{% endfor %}
+  </select>
+  <select name="type" aria-label="Type de ressource">
+    <option value="">Tous les types</option>
+    {% for value, label in types %}<option value="{{ value }}"{% if value == resource_type %} selected{% endif %}>{{ label }}</option>{% endfor %}
+  </select>
+  <button class="btn btn-secondary" type="submit">Afficher</button>
+  {% if day != today %}<a class="btn btn-small btn-secondary" href="{% url 'staff:cw_planning' %}">Aujourd'hui</a>{% endif %}
+</form>
+
+{% if closed %}<p class="hint">Le coworking est fermé ce jour-là selon les horaires d'ouverture.</p>{% endif %}
+
+{% if rows %}
+<div class="planning-wrap">
+<div class="planning" role="table" aria-label="Planning de la journée">
+  <div class="pl-row pl-head" role="row">
+    <div class="pl-label" role="columnheader">Ressource</div>
+    <div class="pl-track" role="columnheader">
+      {% for hour in hours %}<span class="pl-hour" style="left: {{ hour.left|stringformat:'s' }}%">{{ hour.label }}</span>{% endfor %}
+    </div>
+  </div>
+  {% for row in rows %}
+  <div class="pl-row" role="row">
+    <div class="pl-label" role="rowheader">
+      <span class="code">{{ row.resource.code }}</span> {{ row.resource.name }}
+      <span class="hint">{{ row.resource.zone.name }}</span>
+      {% if profile.booking_enabled %}<a class="pl-book" href="{% url 'staff:cw_reservation_new' %}?resource={{ row.resource.pk }}&date={{ day|date:'Y-m-d' }}">Réserver</a>{% endif %}
+    </div>
+    <div class="pl-track" role="cell">
+      {% for hour in hours %}<span class="pl-grid" style="left: {{ hour.left|stringformat:'s' }}%"></span>{% endfor %}
+      {% if now_left is not None %}<span class="pl-now" style="left: {{ now_left|stringformat:'s' }}%" title="Maintenant"></span>{% endif %}
+      {% for item in row.items %}
+      <a class="pl-item pl-{{ item.kind }} s-{{ item.status }}"
+         style="left: {{ item.left|stringformat:'s' }}%; width: {{ item.width|stringformat:'s' }}%"
+         href="{% if item.kind == 'reservation' %}{% url 'staff:cw_reservation_detail' item.pk %}{% else %}{% url 'staff:cw_session_detail' item.pk %}{% endif %}"
+         title="{{ item.status_label }} · {{ item.time }} · {{ item.label }}">
+        <span class="pl-time">{{ item.time }}</span> {{ item.label }}
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+</div>
+<p class="legend">
+  <span class="badge s-confirmed">Réservation confirmée</span>
+  <span class="badge s-open">Présence en cours</span>
+  <span class="badge s-closed">Présence terminée</span>
+  <span class="badge s-no_show">Absence</span>
+  <span class="badge s-completed">Réservation terminée</span>
+</p>
+<p class="hint">Une réservation honorée est remplacée par la présence réelle du client. Les réservations annulées n'apparaissent pas ici : elles restent dans <a href="{% url 'staff:cw_reservations' %}">la liste</a>.</p>
+{% else %}
+<p class="hint">Aucune ressource ne correspond à ces filtres.</p>
+{% endif %}
+{% endblock %}

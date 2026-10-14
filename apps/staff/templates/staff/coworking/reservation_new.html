@@ -1,0 +1,66 @@
+{% extends "staff/base.html" %}
+{% block title %}Nouvelle réservation{% endblock %}
+{% block content %}
+<section class="narrow wide">
+  <h1>Nouvelle réservation</h1>
+  <form method="post" class="stack" id="booking-form">{% csrf_token %}
+    {% for error in form.non_field_errors %}<p class="msg msg-error">{{ error }}</p>{% endfor %}
+
+    <section class="step">
+      <label for="customer_q">1. Client</label>
+      {% if customer %}
+      <p><strong>{{ customer.first_name }} {{ customer.last_name }}</strong> <span class="code">{{ customer.customer_number }}</span>
+        <a href="{% url 'staff:cw_reservation_new' %}">Choisir un autre client</a></p>
+      <input type="hidden" name="customer_id" value="{{ customer.pk }}">
+      {% else %}
+      <input id="customer_q" name="customer_q" class="scan" autocomplete="off" autofocus
+             placeholder="Numéro, nom ou téléphone"
+             hx-get="{% url 'staff:cw_reservation_customer_lookup' %}" hx-trigger="input changed delay:300ms" hx-target="#customer-panel">
+      <div id="customer-panel" aria-live="polite"><p class="hint">Tapez au moins 2 caractères : numéro, nom, téléphone ou email.</p></div>
+      {% endif %}
+      {% for error in form.customer_id.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+    </section>
+
+    <section class="step" id="period"
+             hx-get="{% url 'staff:cw_reservation_availability' %}" hx-trigger="change"
+             hx-include="#period input, #period select" hx-target="#availability">
+      <label>2. Jour et heures</label>
+      <div class="form-grid">
+        {% for field in form %}{% if field.name == "date" or field.name == "start" or field.name == "end" or field.name == "resource_type" %}
+        {% include "staff/_field.html" %}
+        {% endif %}{% endfor %}
+      </div>
+      <div class="help">Durée : de {{ profile.min_booking_minutes }} à {{ profile.max_booking_minutes }} minutes{% if profile.opening_hours %}, dans les horaires d'ouverture{% endif %}.</div>
+    </section>
+
+    <section class="step">
+      <label>3. Ressource libre</label>
+      <div id="availability" aria-live="polite">{% include "staff/coworking/_availability.html" %}</div>
+      {% for error in form.resource_id.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+    </section>
+
+    <section class="step">
+      {% for field in form %}{% if field.name == "notes" %}{% include "staff/_field.html" %}{% endif %}{% endfor %}
+    </section>
+
+    <div class="actions-row">
+      <button class="btn btn-large" type="submit">Enregistrer la réservation</button>
+      <a class="btn btn-large btn-secondary" href="{% url 'staff:cw_planning' %}">Annuler</a>
+    </div>
+  </form>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+  var input = document.getElementById("customer_q");
+  if (input) {
+    // Entrée lance la recherche au lieu d'envoyer le formulaire.
+    input.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        if (window.htmx) { htmx.trigger(input, "input"); }
+      }
+    });
+  }
+</script>
+{% endblock %}

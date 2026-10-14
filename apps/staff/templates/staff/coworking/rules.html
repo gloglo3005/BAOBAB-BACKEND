@@ -1,0 +1,61 @@
+{% extends "staff/base.html" %}
+{% block title %}Règles de fonctionnement{% endblock %}
+{% block content %}
+<section class="narrow wide">
+  <h1>Règles de fonctionnement</h1>
+  <form method="post" class="stack">{% csrf_token %}
+    {% for error in form.non_field_errors %}<p class="msg msg-error">{{ error }}</p>{% endfor %}
+
+    <fieldset class="panel">
+      <legend>Réservations et accueil</legend>
+      <div class="field">
+        <label class="inline">{{ form.booking_enabled }} {{ form.booking_enabled.label }}</label>
+        {% for error in form.booking_enabled.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+        <div class="help">{{ form.booking_enabled.help_text }}</div>
+      </div>
+      <div class="field">
+        <label class="inline">{{ form.walk_in_enabled }} {{ form.walk_in_enabled.label }}</label>
+        {% for error in form.walk_in_enabled.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+        <div class="help">{{ form.walk_in_enabled.help_text }}</div>
+      </div>
+      {% include "staff/_field.html" with field=form.min_booking_minutes %}
+      {% include "staff/_field.html" with field=form.max_booking_minutes %}
+    </fieldset>
+
+    <fieldset class="panel">
+      <legend>Délais</legend>
+      {% include "staff/_field.html" with field=form.cancellation_deadline_hours %}
+      {% include "staff/_field.html" with field=form.no_show_grace_minutes %}
+      {% include "staff/_field.html" with field=form.walk_in_buffer_minutes %}
+      {% include "staff/_field.html" with field=form.check_in_early_minutes %}
+    </fieldset>
+
+    <fieldset class="panel">
+      <legend>Horaires d'ouverture</legend>
+      <p class="hint">Laissez tout vide pour ne mettre aucune restriction d'horaire. Dès qu'un jour est rempli, les jours laissés vides sont fermés. Une réservation doit tenir dans une même journée d'ouverture.</p>
+      <table class="table hours">
+        <thead><tr><th>Jour</th><th>Ouverture</th><th>Fermeture</th></tr></thead>
+        <tbody>
+        {% for label, opening, closing in form.day_rows %}
+          <tr>
+            <td>{{ label }}</td>
+            <td>{{ opening }}{% for error in opening.errors %}<p class="field-error">{{ error }}</p>{% endfor %}</td>
+            <td>{{ closing }}{% for error in closing.errors %}<p class="field-error">{{ error }}</p>{% endfor %}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </fieldset>
+
+    <fieldset class="panel">
+      <legend>Présentation</legend>
+      {% include "staff/_field.html" with field=form.public_description %}
+    </fieldset>
+
+    <div class="actions-row">
+      <button class="btn btn-large" type="submit">Enregistrer</button>
+      <a class="btn btn-large btn-secondary" href="{% url 'staff:cw_setup' %}">Retour</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

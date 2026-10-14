@@ -1,0 +1,30 @@
+{% extends "staff/base.html" %}
+{% block title %}Configuration du coworking{% endblock %}
+{% block content %}
+<h1>Configuration du coworking</h1>
+<p class="hint">Préparez le lieu : des zones, des ressources à réserver, leurs tarifs, puis les règles de fonctionnement. Rien ne se supprime : on désactive.</p>
+
+{% if zone_count == 0 or resource_count == 0 or rate_count == 0 %}
+<ol class="checklist">
+  <li class="{% if zone_count %}done{% endif %}">Créer au moins une zone</li>
+  <li class="{% if resource_count %}done{% endif %}">Créer des ressources (postes, salles)</li>
+  <li class="{% if rate_count %}done{% endif %}">Définir les tarifs</li>
+</ol>
+{% elif without_rate %}
+<p class="notice">{{ without_rate }} ressource{{ without_rate|pluralize }} active{{ without_rate|pluralize }} sans tarif : {{ without_rate|pluralize:"son,leur" }} utilisation sera comptée 0 XOF. <a href="{% url 'staff:cw_rates' %}">Voir les tarifs</a></p>
+{% endif %}
+
+<dl class="stats">
+  <a class="stat" href="{% url 'staff:cw_zones' %}"><dt>Zones actives</dt><dd>{{ zone_count }}</dd></a>
+  <a class="stat" href="{% url 'staff:cw_resources' %}"><dt>Ressources actives</dt><dd>{{ resource_count }}</dd></a>
+  <a class="stat" href="{% url 'staff:cw_rates' %}"><dt>Tarifs actifs</dt><dd>{{ rate_count }}</dd></a>
+  <a class="stat" href="{% url 'staff:cw_rules' %}"><dt>Règles et horaires</dt><dd class="stat-text">{% if profile.opening_hours %}Horaires définis{% else %}Aucune restriction{% endif %}</dd></a>
+</dl>
+
+<div class="actions-row">
+  <a class="btn" href="{% url 'staff:cw_zone_new' %}">Nouvelle zone</a>
+  <a class="btn" href="{% url 'staff:cw_resource_new' %}">Nouvelle ressource</a>
+  <a class="btn" href="{% url 'staff:cw_rate_new' %}">Nouveau tarif</a>
+  <a class="btn btn-secondary" href="{% url 'staff:cw_rules' %}">Règles de fonctionnement</a>
+</div>
+{% endblock %}

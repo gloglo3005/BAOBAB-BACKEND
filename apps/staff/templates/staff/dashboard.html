@@ -13,6 +13,7 @@
   <a class="btn btn-large btn-secondary" href="{% url 'staff:return' %}">Enregistrer un retour</a>
 </div>
 
+{% if cw_stats %}<h2>Bibliothèque</h2>{% endif %}
 <dl class="stats">
   <div class="stat"><dt>Prêts du jour</dt><dd>{{ stats.loans_today }}</dd></div>
   <div class="stat"><dt>Retours du jour</dt><dd>{{ stats.returns_today }}</dd></div>
@@ -45,7 +46,11 @@
 {% else %}
 <p class="hint">Aucun prêt pour l'instant. Commencez par « Prêter un livre ».</p>
 {% endif %}
-{% else %}
+{% endif %}
+
+{% if cw_stats %}{% include "staff/coworking/_dashboard.html" %}{% endif %}
+
+{% if not stats and not cw_stats %}
 <p class="hint">Aucun module de gestion n'est encore activé pour cette structure.</p>
 {% endif %}
 {% endblock %}

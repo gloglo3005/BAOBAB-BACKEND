@@ -1,11 +1,12 @@
 from django.urls import path
 
-from . import views
+from . import views, views_coworking, views_coworking_booking, views_coworking_desk
 
 app_name = "staff"
 
 urlpatterns = [
-    path("", views.dashboard, name="dashboard"),
+    # Tableau de bord commun : bibliothèque et/ou coworking selon les modules activés.
+    path("", views_coworking.dashboard, name="dashboard"),
     path("login/", views.StaffLoginView.as_view(), name="login"),
     path("logout/", views.logout_view, name="logout"),
     path("password/", views.StaffPasswordChangeView.as_view(), name="password"),
@@ -33,4 +34,44 @@ urlpatterns = [
     path("catalog/copies/<int:pk>/", views.copy_edit, name="copy_edit"),
     path("catalog/copies/<int:pk>/status/", views.copy_status, name="copy_status"),
     path("history/", views.history, name="history"),
+    # Coworking : configuration (livraison 1)
+    path("coworking/", views_coworking.setup, name="cw_setup"),
+    path("coworking/zones/", views_coworking.zones, name="cw_zones"),
+    path("coworking/zones/new/", views_coworking.zone_new, name="cw_zone_new"),
+    path("coworking/zones/<int:pk>/", views_coworking.zone_edit, name="cw_zone_edit"),
+    path("coworking/resources/", views_coworking.resources, name="cw_resources"),
+    path("coworking/resources/new/", views_coworking.resource_new, name="cw_resource_new"),
+    path("coworking/resources/<int:pk>/", views_coworking.resource_edit, name="cw_resource_edit"),
+    path("coworking/rates/", views_coworking.rates, name="cw_rates"),
+    path("coworking/rates/new/", views_coworking.rate_new, name="cw_rate_new"),
+    path("coworking/rates/<int:pk>/", views_coworking.rate_edit, name="cw_rate_edit"),
+    path("coworking/rules/", views_coworking.rules, name="cw_rules"),
+    # Coworking : comptoir (livraison 2)
+    path("coworking/customers/", views_coworking_desk.customers, name="cw_customers"),
+    path("coworking/customers/new/", views_coworking_desk.customer_new, name="cw_customer_new"),
+    path("coworking/customers/lookup/", views_coworking_desk.customer_lookup, name="cw_customer_lookup"),
+    path("coworking/customers/<int:pk>/", views_coworking_desk.customer_detail, name="cw_customer_detail"),
+    path("coworking/customers/<int:pk>/edit/", views_coworking_desk.customer_edit, name="cw_customer_edit"),
+    path("coworking/customers/<int:pk>/action/", views_coworking_desk.customer_action, name="cw_customer_action"),
+    path("coworking/reception/", views_coworking_desk.reception, name="cw_reception"),
+    path("coworking/reception/check-in/", views_coworking_desk.check_in, name="cw_check_in"),
+    path("coworking/sessions/<int:pk>/", views_coworking_desk.session_detail, name="cw_session_detail"),
+    path("coworking/sessions/<int:pk>/check-out/", views_coworking_desk.check_out, name="cw_check_out"),
+    path("coworking/unpaid/", views_coworking_desk.unpaid, name="cw_unpaid"),
+    path("coworking/payments/", views_coworking_desk.payments, name="cw_payments"),
+    path("coworking/payments/new/", views_coworking_desk.payment_new, name="cw_payment_new"),
+    path("coworking/payments/customer-lookup/", views_coworking_desk.payment_customer_lookup, name="cw_payment_customer_lookup"),
+    path("coworking/payments/<int:pk>/", views_coworking_desk.payment_receipt, name="cw_payment_receipt"),
+    path("coworking/payments/<int:pk>/void/", views_coworking_desk.payment_void, name="cw_payment_void"),
+    # Coworking : réservations et suivi (livraison 3)
+    path("coworking/planning/", views_coworking_booking.planning, name="cw_planning"),
+    path("coworking/reservations/", views_coworking_booking.reservations, name="cw_reservations"),
+    path("coworking/reservations/new/", views_coworking_booking.reservation_new, name="cw_reservation_new"),
+    path("coworking/reservations/availability/", views_coworking_booking.reservation_availability, name="cw_reservation_availability"),
+    path("coworking/reservations/customer-lookup/", views_coworking_booking.reservation_customer_lookup, name="cw_reservation_customer_lookup"),
+    path("coworking/reservations/<int:pk>/", views_coworking_booking.reservation_detail, name="cw_reservation_detail"),
+    path("coworking/reservations/<int:pk>/cancel/", views_coworking_booking.reservation_cancel, name="cw_reservation_cancel"),
+    path("coworking/reservations/<int:pk>/no-show/", views_coworking_booking.reservation_no_show, name="cw_reservation_no_show"),
+    path("coworking/sessions/", views_coworking_booking.sessions, name="cw_sessions"),
+    path("coworking/sessions/<int:pk>/correct/", views_coworking_booking.session_correct, name="cw_session_correct"),
 ]

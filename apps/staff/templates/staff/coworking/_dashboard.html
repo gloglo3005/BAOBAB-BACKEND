@@ -1,0 +1,27 @@
+<section class="cw-dashboard">
+  {% if stats %}<h2>Coworking</h2>{% endif %}
+  {% if cw_stats.resources.total == 0 %}
+  <p class="notice">Aucune ressource active pour l'instant. <a href="{% url 'staff:cw_setup' %}">Configurer le coworking</a> : zones, ressources, tarifs.</p>
+  {% else %}
+  <div class="actions-row">
+    <a class="btn btn-large" href="{% url 'staff:cw_reception' %}">Accueil : arrivée et sortie</a>
+    <a class="btn btn-large btn-secondary" href="{% url 'staff:cw_planning' %}">Planning et réservations</a>
+    <a class="btn btn-large btn-secondary" href="{% url 'staff:cw_payment_new' %}">Enregistrer un paiement</a>
+  </div>
+  <dl class="stats">
+    <div class="stat stat-good"><dt>Ressources libres</dt><dd>{{ cw_stats.resources.free }} <small>/ {{ cw_stats.resources.total }}</small></dd></div>
+    <div class="stat"><dt>Occupées</dt><dd>{{ cw_stats.resources.occupied }}</dd></div>
+    <div class="stat"><dt>Réservées maintenant</dt><dd>{{ cw_stats.resources.reserved_now }}</dd></div>
+    <a class="stat" href="{% url 'staff:cw_reception' %}"><dt>Sessions en cours</dt><dd>{{ cw_stats.sessions.open }}</dd></a>
+    <div class="stat"><dt>Sessions terminées aujourd'hui</dt><dd>{{ cw_stats.sessions.closed_today }}</dd></div>
+    <a class="stat" href="{% url 'staff:cw_planning' %}"><dt>Réservations confirmées aujourd'hui</dt><dd>{{ cw_stats.reservations_today.CONFIRMED }}</dd></a>
+    <a class="stat{% if cw_stats.reservations_awaiting_no_show_decision %} stat-alert{% endif %}" href="{% url 'staff:cw_reservations' %}?state=TO_DECIDE"><dt>Absences à décider</dt><dd>{{ cw_stats.reservations_awaiting_no_show_decision }}</dd></a>
+    <a class="stat{% if cw_unpaid.count %} stat-alert{% endif %}" href="{% url 'staff:cw_unpaid' %}"><dt>À encaisser</dt><dd>{{ cw_unpaid.amount|floatformat:"0g" }} <small>XOF</small></dd></a>
+    <div class="stat"><dt>Encaissé aujourd'hui</dt><dd>{{ cw_stats.revenue_today.amount|floatformat:"0g" }} <small>{{ cw_stats.revenue_today.currency }}</small></dd></div>
+  </dl>
+  {% endif %}
+  <div class="actions-row">
+    <a class="btn btn-secondary" href="{% url 'staff:cw_customers' %}">Clients</a>
+    <a class="btn btn-secondary" href="{% url 'staff:cw_setup' %}">Configuration du coworking</a>
+  </div>
+</section>

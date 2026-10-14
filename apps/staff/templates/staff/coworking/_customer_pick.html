@@ -1,0 +1,11 @@
+{% if hint %}
+  <p class="hint">{{ hint }}{% if query and hint == "Aucun client trouvé." %} <a href="{% url 'staff:cw_customer_new' %}">Créer ce client</a>.{% endif %}</p>
+{% else %}
+  {% for customer in rows %}
+  <a class="choice choice-link" href="{% url 'staff:cw_payment_new' %}?customer={{ customer.pk }}">
+    <span class="choice-main"><strong>{{ customer.first_name }} {{ customer.last_name }}</strong> <span class="code">{{ customer.customer_number }}</span></span>
+    <span class="choice-meta">{% if customer.phone %}<span>{{ customer.phone }}</span>{% endif %}</span>
+    <span class="btn btn-small">Choisir</span>
+  </a>
+  {% endfor %}
+{% endif %}

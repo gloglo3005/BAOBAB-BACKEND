@@ -1,0 +1,77 @@
+{% extends "staff/base.html" %}
+{% block title %}Session{% endblock %}
+{% block content %}
+<div class="title-row">
+  <h1>Session {% if session.status == "OPEN" %}en cours{% else %}terminée{% endif %}</h1>
+  <div class="actions-row">
+    <a class="btn btn-secondary" href="{% url 'staff:cw_session_correct' session.pk %}">Corriger</a>
+    <a class="btn btn-secondary" href="{% url 'staff:cw_sessions' %}">Historique</a>
+    <a class="btn btn-secondary" href="{% url 'staff:cw_reception' %}">Retour à l'accueil</a>
+  </div>
+</div>
+<dl class="facts">
+  <div><dt>Client</dt><dd><a href="{% url 'staff:cw_customer_detail' session.customer_id %}">{{ session.customer.first_name }} {{ session.customer.last_name }}</a> <span class="code">{{ session.customer.customer_number }}</span></dd></div>
+  <div><dt>Ressource</dt><dd><span class="code">{{ session.resource.code }}</span> {{ session.resource.name }}</dd></div>
+  <div><dt>Arrivée</dt><dd>{{ session.checked_in_at|date:"d/m/Y à H:i" }}</dd></div>
+  <div><dt>Sortie</dt><dd>{% if session.checked_out_at %}{{ session.checked_out_at|date:"d/m/Y à H:i" }}{% else %}-{% endif %}</dd></div>
+  <div><dt>Durée</dt><dd>{{ session.duration }}</dd></div>
+  <div><dt>Origine</dt><dd>{% if session.reservation_id %}<a href="{% url 'staff:cw_reservation_detail' session.reservation_id %}">Réservation de {{ session.reservation.starts_at|date:"H:i" }} à {{ session.reservation.ends_at|date:"H:i" }}</a>{% else %}Sans réservation{% endif %}</dd></div>
+</dl>
+
+{% if session.status == "OPEN" %}
+<form method="post" action="{% url 'staff:cw_check_out' session.pk %}">{% csrf_token %}
+  <button class="btn btn-large" type="submit">Enregistrer la sortie</button>
+</form>
+{% else %}
+<dl class="stats">
+  <div class="stat"><dt>Montant dû</dt><dd>{{ session.amount|floatformat:"0g" }} <small>XOF</small></dd></div>
+  <div class="stat"><dt>Déjà payé</dt><dd>{{ session.paid|floatformat:"0g" }} <small>XOF</small></dd></div>
+  <div class="stat{% if session.balance > 0 %} stat-alert{% else %} stat-good{% endif %}"><dt>Reste à payer</dt><dd>{% if session.balance > 0 %}{{ session.balance|floatformat:"0g" }}{% else %}0{% endif %} <small>XOF</small></dd></div>
+</dl>
+{% if session.balance > 0 %}
+<div class="actions-row">
+  <a class="btn btn-large" href="{% url 'staff:cw_payment_new' %}?session={{ session.pk }}">Enregistrer le paiement</a>
+</div>
+{% endif %}
+{% endif %}
+
+{% if payments %}
+<h2>Paiements</h2>
+<div class="table-wrap">
+<table class="table">
+  <thead><tr><th>Reçu</th><th>Date</th><th>Montant</th><th>Moyen</th><th>Statut</th></tr></thead>
+  <tbody>
+  {% for payment in payments %}
+    <tr>
+      <td><a href="{% url 'staff:cw_payment_receipt' payment.pk %}">{{ payment.receipt_number }}</a>{% if payment.reservation_id %} <span class="hint">(sur la réservation)</span>{% endif %}</td>
+      <td>{{ payment.paid_at|date:"d/m/Y H:i" }}</td>
+      <td class="nowrap">{{ payment.amount|floatformat:"0g" }} {{ payment.currency }}</td>
+      <td>{{ payment.get_method_display }}</td>
+      <td><span class="badge s-{{ payment.status|lower }}">{{ payment.get_status_display }}</span></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+
+{% if corrections %}
+<h2>Corrections</h2>
+<div class="table-wrap">
+<table class="table">
+  <thead><tr><th>Le</th><th>Par</th><th>Avant</th><th>Après</th><th>Motif</th></tr></thead>
+  <tbody>
+  {% for item in corrections %}
+    <tr>
+      <td class="nowrap">{{ item.at|date:"d/m/Y H:i" }}</td>
+      <td>{{ item.by|default:"-" }}</td>
+      <td>{{ item.before.checked_in_at|date:"d/m H:i" }}{% if item.before.checked_out_at %} → {{ item.before.checked_out_at|date:"d/m H:i" }}{% endif %}{% if item.before.amount is not None %}<br>{{ item.before.amount|floatformat:"0g" }} XOF{% endif %}</td>
+      <td>{{ item.after.checked_in_at|date:"d/m H:i" }}{% if item.after.checked_out_at %} → {{ item.after.checked_out_at|date:"d/m H:i" }}{% endif %}{% if item.after.amount is not None %}<br>{{ item.after.amount|floatformat:"0g" }} XOF{% endif %}</td>
+      <td>{{ item.reason }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endif %}
+{% endblock %}
