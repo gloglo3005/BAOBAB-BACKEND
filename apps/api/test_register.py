@@ -12,7 +12,7 @@ PASSWORD = "Zq7!fT2mQp91"
 
 class RegisterApiTests(APITestCase):
     def setUp(self):
-        cache.clear()  # remet Ã  zÃ©ro la limite de crÃ©ations
+        cache.clear()  # remet à zéro la limite de créations
 
     def payload(self, **extra):
         data = {

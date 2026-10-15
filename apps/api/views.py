@@ -19,7 +19,7 @@ from .throttles import LoginRateThrottle, PasswordChangeRateThrottle, RegisterRa
 
 
 class PingView(APIView):
-    """Route publique pour vÃ©rifier que l'API rÃ©pond."""
+    """Route publique pour vérifier que l'API répond."""
 
     permission_classes = [AllowAny]
     authentication_classes = []
@@ -46,11 +46,11 @@ class LoginView(TokenObtainPairView):
 
 
 class RegisterView(APIView):
-    """CrÃ©ation d'un compte lecteur par le lecteur lui-mÃªme.
+    """Création d'un compte lecteur par le lecteur lui-même.
 
-    MÃªmes rÃ¨gles que le formulaire /reader/inscription/ (RegisterForm) : aucun champ
-    de rÃ´le n'est lu, le compte n'est jamais staff ni administrateur. Renvoie les
-    jetons, comme la connexion : le lecteur est connectÃ© dÃ¨s son inscription.
+    Mêmes règles que le formulaire /reader/inscription/ (RegisterForm) : aucun champ
+    de rôle n'est lu, le compte n'est jamais staff ni administrateur. Renvoie les
+    jetons, comme la connexion : le lecteur est connecté dès son inscription.
     """
 
     permission_classes = [AllowAny]
@@ -82,7 +82,7 @@ class RegisterView(APIView):
             user = form.save()
         except IntegrityError:
             return Response(
-                {"email": ["Un compte existe dÃ©jÃ  avec cette adresse. Connectez-vous."]},
+                {"email": ["Un compte existe déjà avec cette adresse. Connectez-vous."]},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         refresh = RefreshToken.for_user(user)
@@ -97,7 +97,7 @@ class RegisterView(APIView):
 
 
 class MeView(APIView):
-    """Profil du compte connectÃ©, ses structures de staff et ses fiches de lecteur."""
+    """Profil du compte connecté, ses structures de staff et ses fiches de lecteur."""
 
     permission_classes = [IsAuthenticated]
 
@@ -107,7 +107,7 @@ class MeView(APIView):
 
 
 class PasswordChangeView(APIView):
-    """Changement de mot de passe ; lÃ¨ve l'obligation de changement."""
+    """Changement de mot de passe ; lève l'obligation de changement."""
 
     permission_classes = [IsAuthenticated]
     throttle_classes = [PasswordChangeRateThrottle]

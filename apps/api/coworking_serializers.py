@@ -37,6 +37,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             "public_description", "opening_hours", "booking_enabled", "walk_in_enabled",
             "min_booking_minutes", "max_booking_minutes", "cancellation_deadline_hours",
             "no_show_grace_minutes", "walk_in_buffer_minutes", "check_in_early_minutes",
+            "max_upcoming_reservations",
         ]
 
 

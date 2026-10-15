@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: API de la plateforme bibliothèques
+  title: API de la plateforme multi-activités
   version: 1.0.0
   description: API utilisée par le logiciel de bureau (staff) et l'application mobile
     (lecteurs).
@@ -99,6 +99,38 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/v1/auth/register/:
+    post:
+      operationId: auth_register_create
+      description: |-
+        Création d'un compte lecteur par le lecteur lui-même.
+
+        Mêmes règles que le formulaire /reader/inscription/ (RegisterForm) : aucun champ
+        de rôle n'est lu, le compte n'est jamais staff ni administrateur. Renvoie les
+        jetons, comme la connexion : le lecteur est connecté dès son inscription.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Register'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Register'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Register'
+        required: true
+      security:
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
           description: ''
   /api/v1/ping/:
     get:
@@ -253,6 +285,364 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /api/v1/reader/coworking/{organization_id}/:
+    get:
+      operationId: reader_coworking_retrieve
+      description: Présentation de l'espace, règles de réservation et ma fiche client
+        (null si absente).
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - reader
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/reader/coworking/{organization_id}/customer/:
+    get:
+      operationId: reader_coworking_customer_retrieve
+      description: 'GET : ma fiche client (404 si absente). POST : je la crée (active
+        tout de suite).'
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - reader
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+          description: ''
+    post:
+      operationId: reader_coworking_customer_create
+      description: 'GET : ma fiche client (404 si absente). POST : je la crée (active
+        tout de suite).'
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - reader
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReaderCustomerInput'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ReaderCustomerInput'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ReaderCustomerInput'
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+          description: ''
+  /api/v1/reader/coworking/{organization_id}/payments/:
+    get:
+      operationId: reader_coworking_payments_list
+      description: Mes paiements enregistrés par l'espace (lecture seule).
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      tags:
+      - reader
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedReaderPaymentList'
+          description: ''
+  /api/v1/reader/coworking/{organization_id}/rates/:
+    get:
+      operationId: reader_coworking_rates_list
+      description: Tarifs en vigueur aujourd'hui.
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - reader
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Rate'
+          description: ''
+  /api/v1/reader/coworking/{organization_id}/reservations/:
+    get:
+      operationId: reader_coworking_reservations_list
+      description: 'GET : mes réservations (?status=CONFIRMED...). POST : je réserve
+        une ressource.'
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      tags:
+      - reader
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedReaderReservationList'
+          description: ''
+    post:
+      operationId: reader_coworking_reservations_create
+      description: 'GET : mes réservations (?status=CONFIRMED...). POST : je réserve
+        une ressource.'
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - reader
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReaderReservationInput'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ReaderReservationInput'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ReaderReservationInput'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReaderReservation'
+          description: ''
+  /api/v1/reader/coworking/{organization_id}/reservations/{id}/:
+    get:
+      operationId: reader_coworking_reservations_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - reader
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReaderReservation'
+          description: ''
+  /api/v1/reader/coworking/{organization_id}/reservations/{id}/cancel/:
+    post:
+      operationId: reader_coworking_reservations_cancel_create
+      description: J'annule ma réservation, avant le délai d'annulation, avec un motif.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - reader
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReaderCancelInput'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ReaderCancelInput'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ReaderCancelInput'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReaderReservation'
+          description: ''
+  /api/v1/reader/coworking/{organization_id}/resources/:
+    get:
+      operationId: reader_coworking_resources_list
+      description: Ressources réservables (actives, dans une zone active). ?type=DESK|ROOM|OTHER
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - reader
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReaderResource'
+          description: ''
+  /api/v1/reader/coworking/{organization_id}/resources/availability/:
+    get:
+      operationId: reader_coworking_resources_availability_list
+      description: 'Ressources libres sur toute une période : ?start=...&end=...&type=DESK'
+      parameters:
+      - in: query
+        name: end
+        schema:
+          type: string
+          format: date-time
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: start
+        schema:
+          type: string
+          format: date-time
+        required: true
+      - in: query
+        name: type
+        schema:
+          type: string
+      tags:
+      - reader
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReaderResource'
+          description: ''
+  /api/v1/reader/coworking/{organization_id}/sessions/:
+    get:
+      operationId: reader_coworking_sessions_list
+      description: 'Mes passages (arrivées et sorties) : ?status=OPEN|CLOSED'
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      tags:
+      - reader
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedReaderSessionList'
+          description: ''
   /api/v1/reader/link/:
     post:
       operationId: reader_link_create
@@ -329,7 +719,13 @@ paths:
   /api/v1/reader/organizations/:
     get:
       operationId: reader_organizations_list
-      description: Structures où l'on peut s'inscrire (actives, avec le module bibliothèque).
+      description: |-
+        Structures visibles par le lecteur : actives, avec au moins un module.
+
+        ?q= cherche dans le nom et la ville. ?module=library|coworking ne garde
+        que les structures qui ont ce module. Chaque structure indique ses modules
+        et le statut du lecteur dedans (my_membership pour la bibliothèque,
+        my_customer pour le coworking).
       parameters:
       - name: page
         required: false
@@ -874,6 +1270,1064 @@ paths:
               schema:
                 $ref: '#/components/schemas/Copy'
           description: ''
+  /api/v1/staff/{organization_id}/coworking/customers/:
+    get:
+      operationId: staff_coworking_customers_list
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCustomerList'
+          description: ''
+    post:
+      operationId: staff_coworking_customers_create
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Customer'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Customer'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Customer'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+          description: ''
+  /api/v1/staff/{organization_id}/coworking/customers/{id}/:
+    get:
+      operationId: staff_coworking_customers_retrieve
+      description: 'GET : détail. PATCH : modification partielle (jamais de suppression).'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+          description: ''
+    patch:
+      operationId: staff_coworking_customers_partial_update
+      description: 'GET : détail. PATCH : modification partielle (jamais de suppression).'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCustomer'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCustomer'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCustomer'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+          description: ''
+  /api/v1/staff/{organization_id}/coworking/dashboard/:
+    get:
+      operationId: staff_coworking_dashboard_retrieve
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/staff/{organization_id}/coworking/payments/:
+    get:
+      operationId: staff_coworking_payments_list
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPaymentList'
+          description: ''
+    post:
+      operationId: staff_coworking_payments_create
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PaymentCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PaymentCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+          description: ''
+  /api/v1/staff/{organization_id}/coworking/payments/{id}/:
+    get:
+      operationId: staff_coworking_payments_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+          description: ''
+  /api/v1/staff/{organization_id}/coworking/payments/{id}/void/:
+    post:
+      operationId: staff_coworking_payments_void_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequiredReason'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RequiredReason'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RequiredReason'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+          description: ''
+  /api/v1/staff/{organization_id}/coworking/profile/:
+    get:
+      operationId: staff_coworking_profile_retrieve
+      description: Fiche et règles du coworking (horaires, délais, réservation, accueil
+        sans réservation).
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+          description: ''
+    patch:
+      operationId: staff_coworking_profile_partial_update
+      description: Fiche et règles du coworking (horaires, délais, réservation, accueil
+        sans réservation).
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProfile'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedProfile'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedProfile'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+          description: ''
+  /api/v1/staff/{organization_id}/coworking/rates/:
+    get:
+      operationId: staff_coworking_rates_list
+      description: 'GET : liste. POST : création (enregistrée et auditée par le service).'
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRateList'
+          description: ''
+    post:
+      operationId: staff_coworking_rates_create
+      description: 'GET : liste. POST : création (enregistrée et auditée par le service).'
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Rate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Rate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Rate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rate'
+          description: ''
+  /api/v1/staff/{organization_id}/coworking/rates/{id}/:
+    get:
+      operationId: staff_coworking_rates_retrieve
+      description: 'GET : détail. PATCH : modification partielle (jamais de suppression).'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rate'
+          description: ''
+    patch:
+      operationId: staff_coworking_rates_partial_update
+      description: 'GET : détail. PATCH : modification partielle (jamais de suppression).'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedRate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedRate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedRate'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rate'
+          description: ''
+  /api/v1/staff/{organization_id}/coworking/reservations/:
+    get:
+      operationId: staff_coworking_reservations_list
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedReservationList'
+          description: ''
+    post:
+      operationId: staff_coworking_reservations_create
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReservationCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ReservationCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ReservationCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reservation'
+          description: ''
+  /api/v1/staff/{organization_id}/coworking/reservations/{id}/:
+    get:
+      operationId: staff_coworking_reservations_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reservation'
+          description: ''
+  /api/v1/staff/{organization_id}/coworking/reservations/{id}/cancel/:
+    post:
+      operationId: staff_coworking_reservations_cancel_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Reason'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Reason'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Reason'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reservation'
+          description: ''
+  /api/v1/staff/{organization_id}/coworking/reservations/{id}/no-show/:
+    post:
+      operationId: staff_coworking_reservations_no_show_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reservation'
+          description: ''
+  /api/v1/staff/{organization_id}/coworking/resources/:
+    get:
+      operationId: staff_coworking_resources_list
+      description: 'GET : liste. POST : création (enregistrée et auditée par le service).'
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResourceList'
+          description: ''
+    post:
+      operationId: staff_coworking_resources_create
+      description: 'GET : liste. POST : création (enregistrée et auditée par le service).'
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Resource'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Resource'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Resource'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+          description: ''
+  /api/v1/staff/{organization_id}/coworking/resources/{id}/:
+    get:
+      operationId: staff_coworking_resources_retrieve
+      description: 'GET : détail. PATCH : modification partielle (jamais de suppression).'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+          description: ''
+    patch:
+      operationId: staff_coworking_resources_partial_update
+      description: 'GET : détail. PATCH : modification partielle (jamais de suppression).'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedResource'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedResource'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedResource'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+          description: ''
+  /api/v1/staff/{organization_id}/coworking/resources/availability/:
+    get:
+      operationId: staff_coworking_resources_availability_list
+      description: 'Ressources libres sur toute une période : ?start=...&end=...&type=DESK'
+      parameters:
+      - in: query
+        name: end
+        schema:
+          type: string
+          format: date-time
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: start
+        schema:
+          type: string
+          format: date-time
+        required: true
+      - in: query
+        name: type
+        schema:
+          type: string
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Resource'
+          description: ''
+  /api/v1/staff/{organization_id}/coworking/sessions/:
+    get:
+      operationId: staff_coworking_sessions_list
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedSessionList'
+          description: ''
+  /api/v1/staff/{organization_id}/coworking/sessions/{id}/:
+    get:
+      operationId: staff_coworking_sessions_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          description: ''
+  /api/v1/staff/{organization_id}/coworking/sessions/{id}/check-out/:
+    post:
+      operationId: staff_coworking_sessions_check_out_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckOut'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CheckOut'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CheckOut'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          description: ''
+  /api/v1/staff/{organization_id}/coworking/sessions/{id}/correct/:
+    post:
+      operationId: staff_coworking_sessions_correct_create
+      description: 'Correction manuelle (heures, montant) : motif obligatoire, tout
+        est journalisé.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CorrectSession'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CorrectSession'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CorrectSession'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          description: ''
+  /api/v1/staff/{organization_id}/coworking/sessions/check-in/:
+    post:
+      operationId: staff_coworking_sessions_check_in_create
+      description: 'Arrivée : avec `reservation`, ou sans (`customer` + `resource`).'
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckIn'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CheckIn'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CheckIn'
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          description: ''
+  /api/v1/staff/{organization_id}/coworking/zones/:
+    get:
+      operationId: staff_coworking_zones_list
+      description: 'GET : liste. POST : création (enregistrée et auditée par le service).'
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedZoneList'
+          description: ''
+    post:
+      operationId: staff_coworking_zones_create
+      description: 'GET : liste. POST : création (enregistrée et auditée par le service).'
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Zone'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Zone'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Zone'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Zone'
+          description: ''
+  /api/v1/staff/{organization_id}/coworking/zones/{id}/:
+    get:
+      operationId: staff_coworking_zones_retrieve
+      description: 'GET : détail. PATCH : modification partielle (jamais de suppression).'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Zone'
+          description: ''
+    patch:
+      operationId: staff_coworking_zones_partial_update
+      description: 'GET : détail. PATCH : modification partielle (jamais de suppression).'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedZone'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedZone'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedZone'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Zone'
+          description: ''
   /api/v1/staff/{organization_id}/dashboard/:
     get:
       operationId: staff_dashboard_retrieve
@@ -1408,6 +2862,9 @@ paths:
           description: ''
 components:
   schemas:
+    BlankEnum:
+      enum:
+      - ''
     BookDetail:
       type: object
       properties:
@@ -1613,6 +3070,28 @@ components:
       required:
       - id
       - name
+    CheckIn:
+      type: object
+      properties:
+        reservation:
+          type: string
+          nullable: true
+          description: 'Avec réservation : seul cet identifiant est nécessaire.'
+        customer:
+          type: string
+          nullable: true
+        resource:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          default: ''
+    CheckOut:
+      type: object
+      properties:
+        notes:
+          type: string
+          default: ''
     ConditionEnum:
       enum:
       - NEW
@@ -1756,6 +3235,72 @@ components:
         * `UNAVAILABLE` - Indisponible
         * `DAMAGED` - Endommagé
         * `LOST` - Perdu
+    CorrectSession:
+      type: object
+      properties:
+        reason:
+          type: string
+          maxLength: 200
+        checked_in_at:
+          type: string
+          format: date-time
+          nullable: true
+        checked_out_at:
+          type: string
+          format: date-time
+          nullable: true
+        amount:
+          type: integer
+          minimum: 0
+          nullable: true
+      required:
+      - reason
+    Customer:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        customer_number:
+          type: string
+          readOnly: true
+          title: Numéro client
+        first_name:
+          type: string
+          title: Prénom
+          maxLength: 100
+        last_name:
+          type: string
+          title: Nom
+          maxLength: 100
+        phone:
+          type: string
+          title: Téléphone
+          maxLength: 30
+        email:
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        status:
+          allOf:
+          - $ref: '#/components/schemas/CustomerStatusEnum'
+          title: Statut
+      required:
+      - customer_number
+      - first_name
+      - id
+      - last_name
+    CustomerStatusEnum:
+      enum:
+      - ACTIVE
+      - SUSPENDED
+      type: string
+      description: |-
+        * `ACTIVE` - Actif
+        * `SUSPENDED` - Suspendu
     LinkCode:
       type: object
       properties:
@@ -2087,6 +3632,18 @@ components:
           description: Identifiant de la structure.
       required:
       - organization
+    MethodEnum:
+      enum:
+      - CASH
+      - MOBILE_MONEY
+      - BANK
+      - OTHER
+      type: string
+      description: |-
+        * `CASH` - Espèces
+        * `MOBILE_MONEY` - Mobile Money
+        * `BANK` - Virement / banque
+        * `OTHER` - Autre
     OrganizationMini:
       type: object
       properties:
@@ -2120,12 +3677,23 @@ components:
           type: string
           title: Pays
           maxLength: 100
+        library_module:
+          type: boolean
+          title: Module bibliothèque
+        coworking_module:
+          type: boolean
+          title: Module coworking
         my_membership:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        my_customer:
           type: object
           additionalProperties: {}
           readOnly: true
       required:
       - id
+      - my_customer
       - my_membership
       - name
     OrganizationSummary:
@@ -2232,6 +3800,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Copy'
+    PaginatedCustomerList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Customer'
     PaginatedLoanList:
       type: object
       required:
@@ -2324,6 +3915,52 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/OrganizationPublic'
+    PaginatedPaymentList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Payment'
+    PaginatedRateList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Rate'
     PaginatedReaderBookListList:
       type: object
       required:
@@ -2370,6 +4007,167 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ReaderLoan'
+    PaginatedReaderPaymentList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReaderPayment'
+    PaginatedReaderReservationList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReaderReservation'
+    PaginatedReaderSessionList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReaderSession'
+    PaginatedReservationList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Reservation'
+    PaginatedResourceList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Resource'
+    PaginatedSessionList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Session'
+    PaginatedZoneList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Zone'
     PasswordChange:
       type: object
       properties:
@@ -2433,6 +4231,130 @@ components:
           type: string
           format: date
           nullable: true
+    PatchedCustomer:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        customer_number:
+          type: string
+          readOnly: true
+          title: Numéro client
+        first_name:
+          type: string
+          title: Prénom
+          maxLength: 100
+        last_name:
+          type: string
+          title: Nom
+          maxLength: 100
+        phone:
+          type: string
+          title: Téléphone
+          maxLength: 30
+        email:
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        status:
+          allOf:
+          - $ref: '#/components/schemas/CustomerStatusEnum'
+          title: Statut
+    PatchedProfile:
+      type: object
+      properties:
+        public_description:
+          type: string
+          title: Présentation publique
+        opening_hours:
+          title: Horaires d'ouverture
+        booking_enabled:
+          type: boolean
+          title: Réservation à l'avance
+        walk_in_enabled:
+          type: boolean
+          title: Accueil sans réservation
+        min_booking_minutes:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          title: Durée minimale (min)
+        max_booking_minutes:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          title: Durée maximale (min)
+        cancellation_deadline_hours:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          title: Délai d'annulation (heures avant le début)
+        no_show_grace_minutes:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          title: Délai de grâce avant absence (min)
+        walk_in_buffer_minutes:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          title: Marge avant une réservation pour un accueil sans réservation (min)
+        check_in_early_minutes:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          title: Arrivée autorisée avant l'heure réservée (min)
+        max_upcoming_reservations:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          title: Réservations à venir par client (application)
+          description: 0 = pas de limite. Ne s'applique qu'aux réservations faites
+            depuis l'application.
+    PatchedRate:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        resource:
+          type: integer
+          nullable: true
+        resource_type:
+          default: ''
+          oneOf:
+          - $ref: '#/components/schemas/ResourceTypeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        unit:
+          allOf:
+          - $ref: '#/components/schemas/UnitEnum'
+          title: Unité
+        amount:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          title: Montant (XOF)
+        currency:
+          type: string
+          readOnly: true
+          title: Devise
+        valid_from:
+          type: string
+          format: date
+          nullable: true
+          title: Valable à partir du
+        valid_until:
+          type: string
+          format: date
+          nullable: true
+          title: Valable jusqu'au
+        active:
+          type: boolean
+          title: Actif
     PatchedReferenceUpdate:
       type: object
       properties:
@@ -2441,6 +4363,159 @@ components:
           maxLength: 100
         active:
           type: boolean
+    PatchedResource:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        zone:
+          type: integer
+        zone_name:
+          type: string
+          readOnly: true
+        code:
+          type: string
+          maxLength: 50
+        name:
+          type: string
+          title: Nom
+          maxLength: 100
+        resource_type:
+          allOf:
+          - $ref: '#/components/schemas/ResourceTypeEnum'
+          title: Type
+        capacity:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          title: Capacité (personnes)
+        active:
+          type: boolean
+        notes:
+          type: string
+    PatchedZone:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Nom
+          maxLength: 100
+        description:
+          type: string
+        active:
+          type: boolean
+    Payment:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        receipt_number:
+          type: string
+          readOnly: true
+          title: N° de reçu
+        customer:
+          type: integer
+          readOnly: true
+        customer_number:
+          type: string
+          readOnly: true
+        reservation:
+          type: integer
+          readOnly: true
+          nullable: true
+        session:
+          type: integer
+          readOnly: true
+          nullable: true
+        amount:
+          type: integer
+          readOnly: true
+          title: Montant
+        currency:
+          type: string
+          readOnly: true
+          title: Devise
+        method:
+          allOf:
+          - $ref: '#/components/schemas/MethodEnum'
+          readOnly: true
+          title: Moyen
+        status:
+          allOf:
+          - $ref: '#/components/schemas/Status7a2Enum'
+          readOnly: true
+          title: Statut
+        paid_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Payé le
+        note:
+          type: string
+          readOnly: true
+        voided_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        void_reason:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - amount
+      - created_at
+      - currency
+      - customer
+      - customer_number
+      - id
+      - method
+      - note
+      - paid_at
+      - receipt_number
+      - reservation
+      - session
+      - status
+      - void_reason
+      - voided_at
+    PaymentCreate:
+      type: object
+      properties:
+        customer:
+          type: string
+        amount:
+          type: integer
+          minimum: 1
+          description: Montant entier en francs CFA (XOF).
+        method:
+          allOf:
+          - $ref: '#/components/schemas/MethodEnum'
+          default: CASH
+        reservation:
+          type: string
+          nullable: true
+        session:
+          type: string
+          nullable: true
+        paid_at:
+          type: string
+          format: date-time
+          nullable: true
+        note:
+          type: string
+          default: ''
+          maxLength: 200
+      required:
+      - amount
+      - customer
     Ping:
       type: object
       properties:
@@ -2451,6 +4526,102 @@ components:
       required:
       - status
       - version
+    Profile:
+      type: object
+      properties:
+        public_description:
+          type: string
+          title: Présentation publique
+        opening_hours:
+          title: Horaires d'ouverture
+        booking_enabled:
+          type: boolean
+          title: Réservation à l'avance
+        walk_in_enabled:
+          type: boolean
+          title: Accueil sans réservation
+        min_booking_minutes:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          title: Durée minimale (min)
+        max_booking_minutes:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          title: Durée maximale (min)
+        cancellation_deadline_hours:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          title: Délai d'annulation (heures avant le début)
+        no_show_grace_minutes:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          title: Délai de grâce avant absence (min)
+        walk_in_buffer_minutes:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          title: Marge avant une réservation pour un accueil sans réservation (min)
+        check_in_early_minutes:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          title: Arrivée autorisée avant l'heure réservée (min)
+        max_upcoming_reservations:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          title: Réservations à venir par client (application)
+          description: 0 = pas de limite. Ne s'applique qu'aux réservations faites
+            depuis l'application.
+    Rate:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        resource:
+          type: integer
+          nullable: true
+        resource_type:
+          default: ''
+          oneOf:
+          - $ref: '#/components/schemas/ResourceTypeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        unit:
+          allOf:
+          - $ref: '#/components/schemas/UnitEnum'
+          title: Unité
+        amount:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          title: Montant (XOF)
+        currency:
+          type: string
+          readOnly: true
+          title: Devise
+        valid_from:
+          type: string
+          format: date
+          nullable: true
+          title: Valable à partir du
+        valid_until:
+          type: string
+          format: date
+          nullable: true
+          title: Valable jusqu'au
+        active:
+          type: boolean
+          title: Actif
+      required:
+      - amount
+      - currency
+      - id
+      - unit
     ReaderBookDetail:
       type: object
       description: 'Détail d''un livre : disponibilité par emplacement, sans codes
@@ -2560,6 +4731,14 @@ components:
       - copies_available
       - id
       - title
+    ReaderCancelInput:
+      type: object
+      properties:
+        reason:
+          type: string
+          maxLength: 200
+      required:
+      - reason
     ReaderCategory:
       type: object
       properties:
@@ -2573,6 +4752,28 @@ components:
       required:
       - id
       - name
+    ReaderCustomerInput:
+      type: object
+      properties:
+        first_name:
+          type: string
+          default: ''
+          maxLength: 100
+        last_name:
+          type: string
+          default: ''
+          maxLength: 100
+        phone:
+          type: string
+          default: ''
+          maxLength: 30
+        email:
+          oneOf:
+          - type: string
+            format: email
+            default: ''
+          - type: string
+            maxLength: 0
     ReaderLoan:
       type: object
       description: 'Un prêt vu par son lecteur : jamais de code d''inventaire ni de
@@ -2674,6 +4875,294 @@ components:
       - member_number
       - organization
       - overdue_loans
+    ReaderPayment:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        receipt_number:
+          type: string
+          readOnly: true
+          title: N° de reçu
+        amount:
+          type: integer
+          readOnly: true
+          title: Montant
+        currency:
+          type: string
+          readOnly: true
+          title: Devise
+        method:
+          allOf:
+          - $ref: '#/components/schemas/MethodEnum'
+          readOnly: true
+          title: Moyen
+        status:
+          allOf:
+          - $ref: '#/components/schemas/Status7a2Enum'
+          readOnly: true
+          title: Statut
+        paid_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Payé le
+        reservation:
+          type: integer
+          readOnly: true
+          nullable: true
+        session:
+          type: integer
+          readOnly: true
+          nullable: true
+      required:
+      - amount
+      - currency
+      - id
+      - method
+      - paid_at
+      - receipt_number
+      - reservation
+      - session
+      - status
+    ReaderReservation:
+      type: object
+      description: Comme celle du staff, mais les notes saisies à l'accueil restent
+        internes.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        customer:
+          type: integer
+          readOnly: true
+        customer_number:
+          type: string
+          readOnly: true
+        customer_name:
+          type: string
+          readOnly: true
+        resource:
+          type: integer
+          readOnly: true
+        resource_code:
+          type: string
+          readOnly: true
+        resource_name:
+          type: string
+          readOnly: true
+        starts_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Début
+        ends_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Fin
+        status:
+          allOf:
+          - $ref: '#/components/schemas/Status727Enum'
+          readOnly: true
+          title: Statut
+        rate:
+          type: integer
+          readOnly: true
+          nullable: true
+        quoted_amount:
+          type: integer
+          readOnly: true
+          title: Montant estimé
+        currency:
+          type: string
+          readOnly: true
+          title: Devise
+        amount_paid:
+          type: integer
+          readOnly: true
+        balance:
+          type: integer
+          nullable: true
+          readOnly: true
+        notes:
+          type: string
+          readOnly: true
+        cancelled_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        cancel_reason:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - amount_paid
+      - balance
+      - cancel_reason
+      - cancelled_at
+      - created_at
+      - currency
+      - customer
+      - customer_name
+      - customer_number
+      - ends_at
+      - id
+      - notes
+      - quoted_amount
+      - rate
+      - resource
+      - resource_code
+      - resource_name
+      - starts_at
+      - status
+    ReaderReservationInput:
+      type: object
+      properties:
+        resource:
+          type: string
+          description: Identifiant de la ressource.
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+        notes:
+          type: string
+          default: ''
+          maxLength: 500
+      required:
+      - ends_at
+      - resource
+      - starts_at
+    ReaderResource:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        zone:
+          type: integer
+        zone_name:
+          type: string
+          readOnly: true
+        code:
+          type: string
+          maxLength: 50
+        name:
+          type: string
+          title: Nom
+          maxLength: 100
+        resource_type:
+          allOf:
+          - $ref: '#/components/schemas/ResourceTypeEnum'
+          title: Type
+        capacity:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          title: Capacité (personnes)
+      required:
+      - code
+      - id
+      - name
+      - zone
+      - zone_name
+    ReaderSession:
+      type: object
+      description: 'amount_paid / balance : calculés (ou lus depuis l''annotation
+        `paid` de la liste).'
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        customer:
+          type: integer
+          readOnly: true
+        customer_number:
+          type: string
+          readOnly: true
+        customer_name:
+          type: string
+          readOnly: true
+        resource:
+          type: integer
+          readOnly: true
+        resource_code:
+          type: string
+          readOnly: true
+        resource_name:
+          type: string
+          readOnly: true
+        reservation:
+          type: integer
+          readOnly: true
+          nullable: true
+        checked_in_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Arrivée
+        checked_out_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+          title: Sortie
+        status:
+          allOf:
+          - $ref: '#/components/schemas/Status807Enum'
+          readOnly: true
+          title: Statut
+        rate:
+          type: integer
+          readOnly: true
+          nullable: true
+        amount:
+          type: integer
+          readOnly: true
+          title: Montant dû
+        currency:
+          type: string
+          readOnly: true
+          title: Devise
+        amount_paid:
+          type: integer
+          readOnly: true
+        balance:
+          type: integer
+          nullable: true
+          readOnly: true
+      required:
+      - amount
+      - amount_paid
+      - balance
+      - checked_in_at
+      - checked_out_at
+      - currency
+      - customer
+      - customer_name
+      - customer_number
+      - id
+      - rate
+      - reservation
+      - resource
+      - resource_code
+      - resource_name
+      - status
+    Reason:
+      type: object
+      properties:
+        reason:
+          type: string
+          default: ''
+          maxLength: 200
     ReferenceCreate:
       type: object
       properties:
@@ -2685,6 +5174,315 @@ components:
           default: ''
       required:
       - name
+    Register:
+      type: object
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        password1:
+          type: string
+        password2:
+          type: string
+      required:
+      - email
+      - first_name
+      - last_name
+      - password1
+      - password2
+    RequiredReason:
+      type: object
+      properties:
+        reason:
+          type: string
+          maxLength: 200
+      required:
+      - reason
+    Reservation:
+      type: object
+      description: 'amount_paid / balance : calculés (ou lus depuis l''annotation
+        `paid` de la liste).'
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        customer:
+          type: integer
+          readOnly: true
+        customer_number:
+          type: string
+          readOnly: true
+        customer_name:
+          type: string
+          readOnly: true
+        resource:
+          type: integer
+          readOnly: true
+        resource_code:
+          type: string
+          readOnly: true
+        resource_name:
+          type: string
+          readOnly: true
+        starts_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Début
+        ends_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Fin
+        status:
+          allOf:
+          - $ref: '#/components/schemas/Status727Enum'
+          readOnly: true
+          title: Statut
+        rate:
+          type: integer
+          readOnly: true
+          nullable: true
+        quoted_amount:
+          type: integer
+          readOnly: true
+          title: Montant estimé
+        currency:
+          type: string
+          readOnly: true
+          title: Devise
+        amount_paid:
+          type: integer
+          readOnly: true
+        balance:
+          type: integer
+          nullable: true
+          readOnly: true
+        notes:
+          type: string
+          readOnly: true
+        cancelled_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        cancel_reason:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - amount_paid
+      - balance
+      - cancel_reason
+      - cancelled_at
+      - created_at
+      - currency
+      - customer
+      - customer_name
+      - customer_number
+      - ends_at
+      - id
+      - notes
+      - quoted_amount
+      - rate
+      - resource
+      - resource_code
+      - resource_name
+      - starts_at
+      - status
+    ReservationCreate:
+      type: object
+      properties:
+        customer:
+          type: string
+          description: Identifiant du client.
+        resource:
+          type: string
+          description: Identifiant de la ressource.
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+        notes:
+          type: string
+          default: ''
+      required:
+      - customer
+      - ends_at
+      - resource
+      - starts_at
+    Resource:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        zone:
+          type: integer
+        zone_name:
+          type: string
+          readOnly: true
+        code:
+          type: string
+          maxLength: 50
+        name:
+          type: string
+          title: Nom
+          maxLength: 100
+        resource_type:
+          allOf:
+          - $ref: '#/components/schemas/ResourceTypeEnum'
+          title: Type
+        capacity:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          title: Capacité (personnes)
+        active:
+          type: boolean
+        notes:
+          type: string
+      required:
+      - code
+      - id
+      - name
+      - zone
+      - zone_name
+    ResourceTypeEnum:
+      enum:
+      - DESK
+      - ROOM
+      - OTHER
+      type: string
+      description: |-
+        * `DESK` - Poste individuel
+        * `ROOM` - Salle
+        * `OTHER` - Autre
+    Session:
+      type: object
+      description: 'amount_paid / balance : calculés (ou lus depuis l''annotation
+        `paid` de la liste).'
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        customer:
+          type: integer
+          readOnly: true
+        customer_number:
+          type: string
+          readOnly: true
+        customer_name:
+          type: string
+          readOnly: true
+        resource:
+          type: integer
+          readOnly: true
+        resource_code:
+          type: string
+          readOnly: true
+        resource_name:
+          type: string
+          readOnly: true
+        reservation:
+          type: integer
+          readOnly: true
+          nullable: true
+        checked_in_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Arrivée
+        checked_out_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+          title: Sortie
+        status:
+          allOf:
+          - $ref: '#/components/schemas/Status807Enum'
+          readOnly: true
+          title: Statut
+        rate:
+          type: integer
+          readOnly: true
+          nullable: true
+        amount:
+          type: integer
+          readOnly: true
+          title: Montant dû
+        currency:
+          type: string
+          readOnly: true
+          title: Devise
+        amount_paid:
+          type: integer
+          readOnly: true
+        balance:
+          type: integer
+          nullable: true
+          readOnly: true
+        notes:
+          type: string
+          readOnly: true
+      required:
+      - amount
+      - amount_paid
+      - balance
+      - checked_in_at
+      - checked_out_at
+      - currency
+      - customer
+      - customer_name
+      - customer_number
+      - id
+      - notes
+      - rate
+      - reservation
+      - resource
+      - resource_code
+      - resource_name
+      - status
+    Status727Enum:
+      enum:
+      - CONFIRMED
+      - CANCELLED
+      - NO_SHOW
+      - COMPLETED
+      type: string
+      description: |-
+        * `CONFIRMED` - Confirmée
+        * `CANCELLED` - Annulée
+        * `NO_SHOW` - Absence
+        * `COMPLETED` - Terminée
+    Status7a2Enum:
+      enum:
+      - RECORDED
+      - VOIDED
+      type: string
+      description: |-
+        * `RECORDED` - Enregistré
+        * `VOIDED` - Annulé
+    Status807Enum:
+      enum:
+      - OPEN
+      - CLOSED
+      type: string
+      description: |-
+        * `OPEN` - En cours
+        * `CLOSED` - Terminée
     TokenRefresh:
       type: object
       properties:
@@ -2697,6 +5495,33 @@ components:
       required:
       - access
       - refresh
+    UnitEnum:
+      enum:
+      - HOUR
+      - HALF_DAY
+      - DAY
+      type: string
+      description: |-
+        * `HOUR` - Heure
+        * `HALF_DAY` - Demi-journée (4 h)
+        * `DAY` - Journée (8 h)
+    Zone:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Nom
+          maxLength: 100
+        description:
+          type: string
+        active:
+          type: boolean
+      required:
+      - id
+      - name
   securitySchemes:
     jwtAuth:
       type: http

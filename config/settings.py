@@ -143,6 +143,9 @@ MAILERS = {
 
 AUTH_USER_MODEL = "accounts.User"
 
+# Connexion par e-mail, sans tenir compte des majuscules (claviers de téléphone).
+AUTHENTICATION_BACKENDS = ["apps.accounts.backends.CaseInsensitiveEmailBackend"]
+
 # --- API (DRF, JWT, documentation, CORS) ---
 from datetime import timedelta
 
@@ -186,6 +189,15 @@ _renderers = ["rest_framework.renderers.JSONRenderer"]
 if DEBUG:
     _renderers.append("rest_framework.renderers.BrowsableAPIRenderer")
 
+# Sans cette valeur, DRF croit l'en-tête X-Forwarded-For envoyé par le client et les limites de
+# débit se contournent. Sur Render il y a un seul relais : 1 par défaut (surchargeable par NUM_PROXIES).
+if os.environ.get("NUM_PROXIES"):
+    _num_proxies = int(os.environ["NUM_PROXIES"])
+elif os.environ.get("RENDER"):
+    _num_proxies = 1
+else:
+    _num_proxies = None
+
 REST_FRAMEWORK.update({
     "DEFAULT_RENDERER_CLASSES": _renderers,
     "DEFAULT_THROTTLE_CLASSES": [
@@ -194,7 +206,7 @@ REST_FRAMEWORK.update({
     ],
     "DEFAULT_THROTTLE_RATES": {"anon": "60/min", "user": "300/min"},
     # Nombre de proxys entre Internet et l'application (voir la vérification après déploiement).
-    "NUM_PROXIES": int(os.environ["NUM_PROXIES"]) if os.environ.get("NUM_PROXIES") else None,
+    "NUM_PROXIES": _num_proxies,
 })
 
 # En production, aucune origine CORS par défaut : CORS_ALLOWED_ORIGINS doit être défini.
@@ -209,11 +221,14 @@ if os.environ.get("RENDER"):
 
 # Cache partagé entre les processus (optionnel) : définir CACHE_TABLE, par exemple api_cache.
 # Utile seulement si gunicorn tourne avec plusieurs workers.
-if os.environ.get("CACHE_TABLE"):
+# Sur Render (plusieurs workers gunicorn possibles), le cache est partagé par défaut dans la base
+# (table api_cache, créée par build.sh) : sinon chaque processus compterait ses propres essais.
+_cache_table = os.environ.get("CACHE_TABLE") or ("api_cache" if os.environ.get("RENDER") else "")
+if _cache_table:
     CACHES = {
         "default": {
             "BACKEND": "django.core.cache.backends.db.DatabaseCache",
-            "LOCATION": os.environ["CACHE_TABLE"],
+            "LOCATION": _cache_table,
         }
     }
 

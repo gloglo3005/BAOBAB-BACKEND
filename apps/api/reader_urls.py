@@ -1,8 +1,10 @@
-from django.urls import path
+from django.urls import include, path
 
 from . import reader_views as r
 
 urlpatterns = [
+    # Coworking : consultation, fiche client et réservations du lecteur
+    path("coworking/<str:organization_id>/", include("apps.api.reader_coworking_urls")),
     # Sans fiche de membre
     path("organizations/", r.ReaderOrganizationListView.as_view(), name="reader-organizations"),
     path("memberships/", r.MembershipListCreateView.as_view(), name="reader-memberships"),

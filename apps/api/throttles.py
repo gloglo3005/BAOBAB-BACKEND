@@ -16,13 +16,20 @@ class PasswordChangeRateThrottle(UserRateThrottle):
 
 
 class LinkCodeRateThrottle(UserRateThrottle):
-    """Limite les essais de codes de rattachement (codes Ã  8 caractÃ¨res) par compte."""
+    """Limite les essais de codes de rattachement (codes à 8 caractères) par compte."""
 
     scope = "link"
     rate = "10/hour"
 
 class RegisterRateThrottle(AnonRateThrottle):
-    """Limite les crÃ©ations de compte lecteur par adresse IP (anti-abus)."""
+    """Limite les créations de compte lecteur par adresse IP (anti-abus)."""
 
     scope = "register"
     rate = "10/hour"
+
+
+class ReaderBookingRateThrottle(UserRateThrottle):
+    """Limite les créations de fiche, réservations et annulations d'un lecteur."""
+
+    scope = "reader_booking"
+    rate = "30/hour"
