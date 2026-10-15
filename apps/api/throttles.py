@@ -16,7 +16,13 @@ class PasswordChangeRateThrottle(UserRateThrottle):
 
 
 class LinkCodeRateThrottle(UserRateThrottle):
-    """Limite les essais de codes de rattachement (codes à 8 caractères) par compte."""
+    """Limite les essais de codes de rattachement (codes Ã  8 caractÃ¨res) par compte."""
 
     scope = "link"
+    rate = "10/hour"
+
+class RegisterRateThrottle(AnonRateThrottle):
+    """Limite les crÃ©ations de compte lecteur par adresse IP (anti-abus)."""
+
+    scope = "register"
     rate = "10/hour"
