@@ -15,6 +15,7 @@ from rest_framework.views import APIView
 
 from apps.catalog.models import Book, Category
 from apps.circulation.models import Loan
+from apps.coworking.models import Customer
 from apps.members.models import Member
 from apps.members.services import redeem_link_code, request_membership
 from apps.organizations.models import Organization
@@ -61,16 +62,29 @@ def membership_data(user, member):
 
 
 class ReaderOrganizationListView(generics.ListAPIView):
-    """Structures où l'on peut s'inscrire (actives, avec le module bibliothèque)."""
+    """Structures visibles par le lecteur : actives, avec au moins un module.
+
+    ?q= cherche dans le nom et la ville. ?module=library|coworking ne garde
+    que les structures qui ont ce module. Chaque structure indique ses modules
+    et le statut du lecteur dedans (my_membership pour la bibliothèque,
+    my_customer pour le coworking).
+    """
 
     permission_classes = [IsReady]
     pagination_class = ReaderPagination
     serializer_class = OrganizationPublicSerializer
 
     def get_queryset(self):
-        qs = Organization.objects.filter(
-            status=Organization.Status.ACTIVE, library_module=True
-        ).order_by("name")
+        qs = Organization.objects.filter(status=Organization.Status.ACTIVE).order_by("name")
+        module = self.request.query_params.get("module", "").strip().lower()
+        if module == "library":
+            qs = qs.filter(library_module=True)
+        elif module == "coworking":
+            qs = qs.filter(coworking_module=True)
+        elif module:
+            raise serializers.ValidationError({"module": "Valeur invalide : library ou coworking."})
+        else:
+            qs = qs.filter(Q(library_module=True) | Q(coworking_module=True))
         q = self.request.query_params.get("q", "").strip()
         if q:
             qs = qs.filter(Q(name__icontains=q) | Q(city__icontains=q))
@@ -83,6 +97,10 @@ class ReaderOrganizationListView(generics.ListAPIView):
             context["mine"] = {
                 member.organization_id: member
                 for member in Member.objects.filter(user=user)
+            }
+            context["mine_customers"] = {
+                customer.organization_id: customer
+                for customer in Customer.objects.filter(user=user)
             }
         return context
 

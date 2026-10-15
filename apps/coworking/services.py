@@ -156,6 +156,16 @@ def create_customer(
 ):
     """Fiche client créée à l'accueil (le client n'a pas besoin de compte en ligne)."""
     organization = _prepare(organization, performed_by)
+    return _create_customer(
+        organization, first_name=first_name, last_name=last_name, phone=phone,
+        email=email, user=user, performed_by=performed_by,
+    )
+
+
+def _create_customer(
+    organization, *, first_name, last_name, phone, email, user, performed_by, metadata_extra=None
+):
+    """Numérote, enregistre et journalise un client (structure déjà vérifiée)."""
     profile = _locked_profile(organization)
     number = _next_number(
         profile,
@@ -180,7 +190,7 @@ def create_customer(
         action=AuditLog.Action.CUSTOMER_CREATED,
         entity=customer,
         description=f"Client {number} créé ({first_name} {last_name}).",
-        metadata={"customer_number": number},
+        metadata={"customer_number": number, **(metadata_extra or {})},
     )
     return customer
 
@@ -224,6 +234,17 @@ def create_reservation(
     *, organization, customer_id, resource_id, starts_at, ends_at, created_by, notes=""
 ):
     organization = _prepare(organization, created_by)
+    return _create_reservation(
+        organization, customer_id=customer_id, resource_id=resource_id,
+        starts_at=starts_at, ends_at=ends_at, created_by=created_by, notes=notes,
+    )
+
+
+def _create_reservation(
+    organization, *, customer_id, resource_id, starts_at, ends_at, created_by, notes="",
+    source=Reservation.Source.COUNTER, max_upcoming=0,
+):
+    """Règles communes à l'accueil et à l'application (structure déjà vérifiée)."""
     profile = get_profile(organization)
     if not profile.booking_enabled:
         raise ValidationError("Les réservations à l'avance ne sont pas activées.")
@@ -233,6 +254,8 @@ def create_reservation(
     if ends_at <= starts_at:
         raise ValidationError("La fin doit être postérieure au début.")
     if starts_at < now - timedelta(minutes=5):
+        if source == Reservation.Source.APP:
+            raise ValidationError("Le début est déjà passé.")
         raise ValidationError(
             "Le début est déjà passé. Pour quelqu'un qui est là maintenant, "
             "utilisez l'accueil sans réservation (arrivée)."
@@ -250,6 +273,15 @@ def create_reservation(
     customer = _lock(Customer.objects, "Client", pk=customer_id, organization=organization)
     if customer.status != Customer.Status.ACTIVE:
         raise ValidationError("Ce client est suspendu.")
+    if max_upcoming:
+        upcoming = Reservation.objects.filter(
+            customer=customer, status=Reservation.Status.CONFIRMED, ends_at__gt=now
+        ).count()
+        if upcoming >= max_upcoming:
+            raise ValidationError(
+                f"Limite atteinte : {max_upcoming} réservations à venir au maximum. "
+                "Annulez-en une ou passez à l'accueil."
+            )
 
     if _reservation_conflicts(resource, starts_at, ends_at).exists():
         raise ValidationError("Cette ressource est déjà réservée sur cette période.")
@@ -269,6 +301,7 @@ def create_reservation(
         rate=rate,
         quoted_amount=amount,
         notes=notes,
+        source=source,
         created_by=created_by,
     )
     reservation.full_clean()
@@ -290,6 +323,7 @@ def create_reservation(
             "ends_at": ends_at.isoformat(),
             "quoted_amount": amount,
             "rate": rate.pk if rate else None,
+            "source": source,
         },
     )
     return reservation
@@ -299,6 +333,15 @@ def create_reservation(
 def cancel_reservation(*, organization, reservation_id, performed_by, reason=""):
     """Annule (sans jamais supprimer). Le staff peut annuler tard : on le note dans l'audit."""
     organization = _prepare(organization, performed_by)
+    return _cancel_reservation(
+        organization, reservation_id=reservation_id, performed_by=performed_by, reason=reason
+    )
+
+
+def _cancel_reservation(
+    organization, *, reservation_id, performed_by, reason, enforce_deadline=False
+):
+    """Règles communes d'annulation (structure déjà vérifiée)."""
     profile = get_profile(organization)
     reservation = _lock(
         Reservation.objects, "Réservation", pk=reservation_id, organization=organization
@@ -307,8 +350,16 @@ def cancel_reservation(*, organization, reservation_id, performed_by, reason="")
         raise ValidationError("Seule une réservation confirmée peut être annulée.")
     if reservation.sessions.exists():
         raise ValidationError("Une arrivée est déjà enregistrée sur cette réservation.")
+    reason = (reason or "").strip()
+    if not reason:
+        raise ValidationError("Le motif de l'annulation est obligatoire.")
     now = timezone.now()
     late = reservation.starts_at - now < timedelta(hours=profile.cancellation_deadline_hours)
+    if late and enforce_deadline:
+        raise ValidationError(
+            f"Le délai d'annulation ({profile.cancellation_deadline_hours} h avant le début) "
+            "est dépassé : contactez la structure."
+        )
     reservation.status = Reservation.Status.CANCELLED
     reservation.cancelled_at = now
     reservation.cancelled_by = performed_by

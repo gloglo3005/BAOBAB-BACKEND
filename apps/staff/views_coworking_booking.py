@@ -283,9 +283,6 @@ def reservation_cancel(request, pk):
     organization = request.organization
     reservation = get_object_or_404(Reservation, pk=pk, organization=organization)
     reason = request.POST.get("reason", "").strip()
-    if not reason:
-        messages.error(request, "Le motif de l'annulation est obligatoire.")
-        return redirect("staff:cw_reservation_detail", reservation.pk)
     profile = services.get_profile(organization)
     late = reservation.starts_at - timezone.now() < timedelta(hours=profile.cancellation_deadline_hours)
     try:

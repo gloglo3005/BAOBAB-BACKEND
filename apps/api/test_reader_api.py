@@ -8,6 +8,7 @@ from rest_framework.test import APIClient
 from apps.audit.models import AuditLog
 from apps.catalog.models import Author, Book, BookCopy, Category, Location
 from apps.circulation.models import Loan
+from apps.coworking.models import Customer
 from apps.members.models import Member
 from apps.members.services import create_link_code
 from apps.organizations.models import Organization, OrganizationStaff
@@ -123,6 +124,56 @@ class ReaderApiTests(TestCase):
     def test_organizations_search(self):
         data = self.get("reader-organizations", {"q": "Biblio B"}).json()
         self.assertEqual([o["name"] for o in data["results"]], ["Biblio B"])
+
+    def make_cw_org(self, name, library=False):
+        org = make_org(name, library_module=library)
+        org.coworking_module = True
+        org.save()
+        return org
+
+    def test_organizations_expose_modules_and_my_customer(self):
+        cowork = self.make_cw_org("Cowork C")
+        both = self.make_cw_org("Both D", library=True)
+        suspended = self.make_cw_org("Cowork suspendu")
+        Organization.objects.filter(pk=suspended.pk).update(
+            status=Organization.Status.SUSPENDED
+        )
+        Customer.objects.create(
+            organization=cowork, user=self.reader1, customer_number="CLI-0001",
+            first_name="Awa", last_name="Test",
+        )
+        Customer.objects.create(
+            organization=both, user=self.reader2, customer_number="CLI-0001",
+            first_name="Awa", last_name="Autre",
+        )
+        data = self.get("reader-organizations").json()
+        self.assertEqual(
+            [o["name"] for o in data["results"]],
+            ["Biblio A", "Biblio B", "Both D", "Cowork C"],
+        )
+        by_name = {o["name"]: o for o in data["results"]}
+        self.assertEqual(
+            (by_name["Biblio A"]["library_module"], by_name["Biblio A"]["coworking_module"]),
+            (True, False),
+        )
+        self.assertEqual(
+            (by_name["Cowork C"]["library_module"], by_name["Cowork C"]["coworking_module"]),
+            (False, True),
+        )
+        self.assertEqual(by_name["Cowork C"]["my_customer"]["status"], "ACTIVE")
+        self.assertIsNone(by_name["Both D"]["my_customer"])
+        self.assertIsNone(by_name["Biblio A"]["my_customer"])
+
+    def test_organizations_filter_by_module(self):
+        self.make_cw_org("Cowork C")
+        self.make_cw_org("Both D", library=True)
+
+        def names(params):
+            return [o["name"] for o in self.get("reader-organizations", params).json()["results"]]
+
+        self.assertEqual(names({"module": "coworking"}), ["Both D", "Cowork C"])
+        self.assertEqual(names({"module": "library"}), ["Biblio A", "Biblio B", "Both D"])
+        self.assertEqual(self.get("reader-organizations", {"module": "autre"}).status_code, 400)
 
     def test_organizations_anonymous_refused(self):
         self.client.force_authenticate(None)

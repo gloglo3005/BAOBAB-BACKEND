@@ -129,15 +129,28 @@ class ServiceTests(CoworkingBase, TestCase):
         start = future(2)
         reservation = self.book(start=start)
         services.cancel_reservation(
-            organization=self.org, reservation_id=reservation.pk, performed_by=self.staff
+            organization=self.org, reservation_id=reservation.pk, performed_by=self.staff,
+            reason="Client indisponible",
         )
         reservation.refresh_from_db()
         self.assertEqual(reservation.status, Reservation.Status.CANCELLED)
         self.book(customer=self.customer2, start=start)
         with self.assertRaises(ValidationError):
             services.cancel_reservation(
-                organization=self.org, reservation_id=reservation.pk, performed_by=self.staff
+                organization=self.org, reservation_id=reservation.pk, performed_by=self.staff,
+                reason="Client indisponible",
             )
+
+    def test_cancel_requires_reason(self):
+        reservation = self.book()
+        for reason in (None, "", "   "):
+            with self.assertRaisesMessage(ValidationError, "Le motif de l'annulation est obligatoire."):
+                services.cancel_reservation(
+                    organization=self.org, reservation_id=reservation.pk, performed_by=self.staff,
+                    reason=reason,
+                )
+        reservation.refresh_from_db()
+        self.assertEqual(reservation.status, Reservation.Status.CONFIRMED)
 
     def test_no_show_only_after_grace(self):
         reservation = self.book()

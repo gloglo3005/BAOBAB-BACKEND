@@ -18,10 +18,21 @@ class OrganizationMiniSerializer(serializers.ModelSerializer):
 
 class OrganizationPublicSerializer(serializers.ModelSerializer):
     my_membership = serializers.SerializerMethodField()
+    my_customer = serializers.SerializerMethodField()
 
     class Meta:
         model = Organization
-        fields = ["id", "name", "description", "city", "country", "my_membership"]
+        fields = [
+            "id", "name", "description", "city", "country",
+            "library_module", "coworking_module", "my_membership", "my_customer",
+        ]
+
+    @extend_schema_field(OpenApiTypes.OBJECT)
+    def get_my_customer(self, obj):
+        customer = self.context.get("mine_customers", {}).get(obj.pk)
+        if customer is None:
+            return None
+        return {"id": customer.pk, "status": customer.status}
 
     @extend_schema_field(OpenApiTypes.OBJECT)
     def get_my_membership(self, obj):

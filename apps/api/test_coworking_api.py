@@ -105,6 +105,10 @@ class CoworkingApiTests(TestCase):
         self.assertEqual(listing.status_code, 200)
         self.assertEqual(listing.data["count"], 1)
 
+        no_reason = self.client.post(self.url("cw-reservation-cancel", pk=booked.data["id"]), {}, format="json")
+        self.assertEqual(no_reason.status_code, 409)
+        self.assertEqual(no_reason.data["detail"], "Le motif de l'annulation est obligatoire.")
+
         cancelled = self.client.post(
             self.url("cw-reservation-cancel", pk=booked.data["id"]), {"reason": "Annulé"}, format="json"
         )

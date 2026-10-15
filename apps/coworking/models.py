@@ -68,6 +68,10 @@ class CoworkingProfile(models.Model):
     check_in_early_minutes = models.PositiveIntegerField(
         "arrivée autorisée avant l'heure réservée (min)", default=15
     )
+    max_upcoming_reservations = models.PositiveIntegerField(
+        "réservations à venir par client (application)", default=3,
+        help_text="0 = pas de limite. Ne s'applique qu'aux réservations faites depuis l'application.",
+    )
     next_customer_number = models.PositiveIntegerField(default=1)
     next_receipt_number = models.PositiveIntegerField(default=1)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -281,6 +285,10 @@ class Reservation(OrganizationOwnedModel):
         NO_SHOW = "NO_SHOW", "Absence"
         COMPLETED = "COMPLETED", "Terminée"
 
+    class Source(models.TextChoices):
+        COUNTER = "COUNTER", "Accueil"
+        APP = "APP", "Application"
+
     customer = models.ForeignKey(Customer, on_delete=models.PROTECT, related_name="reservations")
     resource = models.ForeignKey(Resource, on_delete=models.PROTECT, related_name="reservations")
     starts_at = models.DateTimeField("début")
@@ -295,6 +303,9 @@ class Reservation(OrganizationOwnedModel):
     quoted_amount = models.PositiveIntegerField("montant estimé", default=0)
     currency = models.CharField("devise", max_length=3, default=CURRENCY)
     notes = models.TextField(blank=True)
+    source = models.CharField(
+        "origine", max_length=10, choices=Source.choices, default=Source.COUNTER
+    )
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+"
     )
