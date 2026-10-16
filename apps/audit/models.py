@@ -55,6 +55,14 @@ class AuditLog(models.Model):
         SESSION_CORRECTED = "SESSION_CORRECTED", "Session corrigée"
         PAYMENT_RECORDED = "PAYMENT_RECORDED", "Paiement enregistré"
         PAYMENT_VOIDED = "PAYMENT_VOIDED", "Paiement annulé"
+        # --- administration des structures
+        ORGANIZATION_CREATED = "ORGANIZATION_CREATED", "Structure créée"
+        ORGANIZATION_UPDATED = "ORGANIZATION_UPDATED", "Structure modifiée"
+        ORGANIZATION_STATUS_CHANGED = "ORGANIZATION_STATUS_CHANGED", "Statut de structure modifié"
+        LOAN_POLICY_UPDATED = "LOAN_POLICY_UPDATED", "Politique de prêt modifiée"
+        STAFF_CREATED = "STAFF_CREATED", "Compte du personnel créé"
+        STAFF_UPDATED = "STAFF_UPDATED", "Compte du personnel modifié"
+        STAFF_PASSWORD_RESET = "STAFF_PASSWORD_RESET", "Mot de passe du personnel réinitialisé"
 
     organization = models.ForeignKey(
         Organization, on_delete=models.PROTECT, related_name="audit_logs",

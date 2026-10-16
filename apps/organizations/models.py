@@ -84,6 +84,7 @@ class LoanPolicy(models.Model):
 class OrganizationStaff(models.Model):
     class Role(models.TextChoices):
         STAFF = "STAFF", "Personnel de structure"
+        ADMIN = "ADMIN", "Responsable de structure"
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,

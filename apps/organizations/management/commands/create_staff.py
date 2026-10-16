@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 
-from apps.organizations.models import Organization
+from apps.organizations.models import Organization, OrganizationStaff
 from apps.organizations.services import create_staff_account
 
 
@@ -13,6 +13,7 @@ class Command(BaseCommand):
         parser.add_argument("--first-name", required=True)
         parser.add_argument("--last-name", required=True)
         parser.add_argument("--phone", default="")
+        parser.add_argument("--admin", action="store_true", help="crée un responsable de structure")
 
     def handle(self, *args, **options):
         try:
@@ -28,6 +29,7 @@ class Command(BaseCommand):
             first_name=options["first_name"],
             last_name=options["last_name"],
             phone=options["phone"],
+            role=OrganizationStaff.Role.ADMIN if options["admin"] else OrganizationStaff.Role.STAFF,
         )
 
         if password is None:

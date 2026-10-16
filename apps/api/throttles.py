@@ -33,3 +33,10 @@ class ReaderBookingRateThrottle(UserRateThrottle):
 
     scope = "reader_booking"
     rate = "30/hour"
+
+
+class AdminActionRateThrottle(UserRateThrottle):
+    """Limite les créations de comptes et réinitialisations de mot de passe."""
+
+    scope = "admin_action"
+    rate = "60/hour"

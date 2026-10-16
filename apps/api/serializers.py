@@ -5,7 +5,7 @@ from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from apps.members.models import Member
-from apps.organizations.models import Organization
+from apps.organizations.models import Organization, OrganizationStaff
 
 User = get_user_model()
 
@@ -29,6 +29,15 @@ class OrganizationSummarySerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = ["id", "name", "slug", "library_module", "coworking_module"]
+
+
+class StaffOrganizationSerializer(OrganizationSummarySerializer):
+    """Structure du staff, avec le rôle du compte (STAFF ou ADMIN = responsable)."""
+
+    role = serializers.CharField(read_only=True)
+
+    class Meta(OrganizationSummarySerializer.Meta):
+        fields = OrganizationSummarySerializer.Meta.fields + ["role"]
 
 
 class MembershipSerializer(serializers.ModelSerializer):
@@ -58,7 +67,7 @@ class MeSerializer(serializers.ModelSerializer):
             "memberships",
         ]
 
-    @extend_schema_field(OrganizationSummarySerializer(many=True))
+    @extend_schema_field(StaffOrganizationSerializer(many=True))
     def get_staff_organizations(self, user):
         """Structures actives où le compte est staff actif."""
         organizations = (
@@ -70,7 +79,13 @@ class MeSerializer(serializers.ModelSerializer):
             .distinct()
             .order_by("name")
         )
-        return OrganizationSummarySerializer(organizations, many=True).data
+        roles = dict(
+            OrganizationStaff.objects.filter(user=user, active=True).values_list("organization_id", "role")
+        )
+        data = OrganizationSummarySerializer(organizations, many=True).data
+        for item in data:
+            item["role"] = roles.get(item["id"], OrganizationStaff.Role.STAFF)
+        return data
 
     @extend_schema_field(MembershipSerializer(many=True))
     def get_memberships(self, user):

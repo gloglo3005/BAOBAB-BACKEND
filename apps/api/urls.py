@@ -13,6 +13,7 @@ urlpatterns = [
     path("auth/refresh/", TokenRefreshView.as_view(), name="refresh"),
     path("auth/me/", MeView.as_view(), name="me"),
     path("auth/password/", PasswordChangeView.as_view(), name="password"),
+    path("platform/", include("apps.api.platform_urls")),
     path("staff/<str:organization_id>/coworking/", include("apps.api.coworking_urls")),
     path("staff/<str:organization_id>/", include("apps.api.staff_urls")),
     path("reader/", include("apps.api.reader_urls")),

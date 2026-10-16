@@ -1,0 +1,58 @@
+from django.db import migrations, models
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ("audit", "0003_alter_auditlog_action"),
+    ]
+
+    operations = [
+        migrations.AlterField(
+            model_name="auditlog",
+            name="action",
+            field=models.CharField(
+                choices=[
+                    ("BOOK_CREATED", "Livre créé"),
+                    ("BOOK_UPDATED", "Livre modifié"),
+                    ("BOOK_ARCHIVED", "Livre archivé"),
+                    ("COPY_CREATED", "Exemplaire créé"),
+                    ("COPY_MOVED", "Exemplaire déplacé"),
+                    ("COPY_MARKED_LOST", "Exemplaire déclaré perdu"),
+                    ("COPY_STATUS_CHANGED", "Statut d'exemplaire modifié"),
+                    ("MEMBER_CREATED", "Membre créé"),
+                    ("MEMBER_SUSPENDED", "Membre suspendu"),
+                    ("LOAN_CREATED", "Prêt créé"),
+                    ("LOAN_RETURNED", "Prêt retourné"),
+                    ("IMPORT_CONFIRMED", "Import confirmé"),
+                    ("IMPORT_FAILED", "Import échoué"),
+                    ("COWORKING_PROFILE_UPDATED", "Fiche coworking modifiée"),
+                    ("ZONE_CREATED", "Zone créée"),
+                    ("ZONE_UPDATED", "Zone modifiée"),
+                    ("RESOURCE_CREATED", "Ressource créée"),
+                    ("RESOURCE_UPDATED", "Ressource modifiée"),
+                    ("RATE_CREATED", "Tarif créé"),
+                    ("RATE_UPDATED", "Tarif modifié"),
+                    ("CUSTOMER_CREATED", "Client coworking créé"),
+                    ("CUSTOMER_UPDATED", "Client coworking modifié"),
+                    ("RESERVATION_CREATED", "Réservation créée"),
+                    ("RESERVATION_CANCELLED", "Réservation annulée"),
+                    ("RESERVATION_NO_SHOW", "Absence enregistrée"),
+                    ("SESSION_CHECKED_IN", "Arrivée enregistrée"),
+                    ("SESSION_CHECKED_OUT", "Sortie enregistrée"),
+                    ("SESSION_CORRECTED", "Session corrigée"),
+                    ("PAYMENT_RECORDED", "Paiement enregistré"),
+                    ("PAYMENT_VOIDED", "Paiement annulé"),
+                    ("ORGANIZATION_CREATED", "Structure créée"),
+                    ("ORGANIZATION_UPDATED", "Structure modifiée"),
+                    ("ORGANIZATION_STATUS_CHANGED", "Statut de structure modifié"),
+                    ("LOAN_POLICY_UPDATED", "Politique de prêt modifiée"),
+                    ("STAFF_CREATED", "Compte du personnel créé"),
+                    ("STAFF_UPDATED", "Compte du personnel modifié"),
+                    ("STAFF_PASSWORD_RESET", "Mot de passe du personnel réinitialisé"),
+                ],
+                max_length=40,
+                verbose_name="action",
+            ),
+        ),
+    ]

@@ -4,9 +4,17 @@ from . import staff_catalog_views as k
 from . import staff_circulation_views as c
 from . import staff_members_views as m
 from . import staff_views as v
+from . import team_views as t
 
 urlpatterns = [
     path("dashboard/", v.DashboardView.as_view(), name="staff-dashboard"),
+    # Administration de la structure (responsable)
+    path("team/", t.TeamListCreateView.as_view(), name="staff-team"),
+    path("team/<str:pk>/", t.TeamDetailView.as_view(), name="staff-team-detail"),
+    path("team/<str:pk>/reset-password/", t.TeamResetPasswordView.as_view(), name="staff-team-reset"),
+    path("organization/", t.StructureOrganizationView.as_view(), name="staff-organization"),
+    path("loan-policy/", t.LoanPolicyView.as_view(), name="staff-loan-policy"),
+    path("audit/", t.StructureAuditListView.as_view(), name="staff-audit"),
     # Livres
     path("books/", k.BookListCreateView.as_view(), name="staff-books"),
     path("books/<str:pk>/", k.BookDetailUpdateView.as_view(), name="staff-book-detail"),

@@ -104,3 +104,27 @@ class LibraryModuleEnabled(BasePermission):
 # Ensembles prêts à l'emploi pour les routes bibliothèque.
 STAFF_LIBRARY = [IsReady, IsStaffOfOrganization, LibraryModuleEnabled]
 READER_LIBRARY = [IsReady, IsReaderMember, LibraryModuleEnabled]
+
+
+class IsPlatformAdmin(BasePermission):
+    """Administrateur de la plateforme (compte actif, sans changement de mot de passe en attente)."""
+
+    message = "Réservé à l'administrateur de la plateforme."
+
+    def has_permission(self, request, view):
+        user = request.user
+        return bool(
+            user and user.is_authenticated and user.is_active
+            and user.is_platform_admin and not user.must_change_password
+        )
+
+
+class IsStructureAdmin(IsStaffOfOrganization):
+    """Responsable actif d'une structure active : gère l'équipe, la politique de prêt et le journal."""
+
+    message = "Réservé au responsable de la structure."
+
+    def has_permission(self, request, view):
+        if not super().has_permission(request, view):
+            return False
+        return request.membership.role == OrganizationStaff.Role.ADMIN
