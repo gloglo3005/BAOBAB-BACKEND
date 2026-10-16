@@ -40,3 +40,10 @@ class AdminActionRateThrottle(UserRateThrottle):
 
     scope = "admin_action"
     rate = "60/hour"
+
+
+class ImportRateThrottle(UserRateThrottle):
+    """Limite les envois et confirmations d'imports de catalogue."""
+
+    scope = "catalog_import"
+    rate = "30/hour"
