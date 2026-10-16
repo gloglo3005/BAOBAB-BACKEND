@@ -147,6 +147,312 @@ paths:
               schema:
                 $ref: '#/components/schemas/Ping'
           description: ''
+  /api/v1/platform/audit/:
+    get:
+      operationId: platform_audit_list
+      description: 'Journal de toutes les structures : ?organization=, ?action=, ?q=,
+        ?date_from=, ?date_to= (AAAA-MM-JJ).'
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      tags:
+      - platform
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAuditLogList'
+          description: ''
+  /api/v1/platform/dashboard/:
+    get:
+      operationId: platform_dashboard_retrieve
+      tags:
+      - platform
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/platform/organizations/:
+    get:
+      operationId: platform_organizations_list
+      description: 'GET : structures (?q=, ?status=, ?module=LIBRARY|COWORKING). POST
+        : crée une structure.'
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      tags:
+      - platform
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPlatformOrganizationList'
+          description: ''
+    post:
+      operationId: platform_organizations_create
+      description: 'GET : structures (?q=, ?status=, ?module=LIBRARY|COWORKING). POST
+        : crée une structure.'
+      tags:
+      - platform
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlatformOrganizationCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PlatformOrganizationCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PlatformOrganizationCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformOrganization'
+          description: ''
+  /api/v1/platform/organizations/{organization_id}/staff/:
+    get:
+      operationId: platform_organizations_staff_list
+      description: 'GET : comptes du personnel d''une structure. POST : crée un responsable
+        (ou un agent).'
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - platform
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StaffMember'
+          description: ''
+    post:
+      operationId: platform_organizations_staff_create
+      description: 'GET : comptes du personnel d''une structure. POST : crée un responsable
+        (ou un agent).'
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - platform
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/StaffCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/StaffCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffCredentials'
+          description: ''
+  /api/v1/platform/organizations/{organization_id}/staff/{id}/:
+    patch:
+      operationId: platform_organizations_staff_partial_update
+      description: 'PATCH : active/désactive un compte ou change son rôle.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - platform
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedStaffUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedStaffUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedStaffUpdate'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffMember'
+          description: ''
+  /api/v1/platform/organizations/{organization_id}/staff/{id}/reset-password/:
+    post:
+      operationId: platform_organizations_staff_reset_password_create
+      description: Limite supplémentaire sur les écritures sensibles (comptes, mots
+        de passe).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - platform
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffCredentials'
+          description: ''
+  /api/v1/platform/organizations/{id}/:
+    get:
+      operationId: platform_organizations_retrieve
+      description: GET / PATCH d'une structure (le statut a sa propre route).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - platform
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformOrganization'
+          description: ''
+    patch:
+      operationId: platform_organizations_partial_update
+      description: GET / PATCH d'une structure (le statut a sa propre route).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - platform
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPlatformOrganization'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPlatformOrganization'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPlatformOrganization'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformOrganization'
+          description: ''
+  /api/v1/platform/organizations/{id}/status/:
+    post:
+      operationId: platform_organizations_status_create
+      description: Valide, suspend, refuse ou remet en attente une structure.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - platform
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StatusInput'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/StatusInput'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/StatusInput'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformOrganization'
+          description: ''
   /api/v1/reader/{member_id}/books/:
     get:
       operationId: reader_books_list
@@ -749,6 +1055,40 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaginatedOrganizationPublicList'
+          description: ''
+  /api/v1/staff/{organization_id}/audit/:
+    get:
+      operationId: staff_audit_list
+      description: 'Journal d''audit de la structure (responsable) : ?action=, ?q=,
+        ?date_from=, ?date_to='
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAuditLogList'
           description: ''
   /api/v1/staff/{organization_id}/books/:
     get:
@@ -2349,6 +2689,60 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /api/v1/staff/{organization_id}/loan-policy/:
+    get:
+      operationId: staff_loan_policy_retrieve
+      description: 'Politique de prêt : lisible par tout le personnel, modifiable
+        par le responsable.'
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoanPolicy'
+          description: ''
+    patch:
+      operationId: staff_loan_policy_partial_update
+      description: 'Politique de prêt : lisible par tout le personnel, modifiable
+        par le responsable.'
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedLoanPolicy'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedLoanPolicy'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedLoanPolicy'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoanPolicy'
+          description: ''
   /api/v1/staff/{organization_id}/loans/:
     get:
       operationId: staff_loans_list
@@ -2860,8 +3254,315 @@ paths:
               schema:
                 $ref: '#/components/schemas/Member'
           description: ''
+  /api/v1/staff/{organization_id}/organization/:
+    get:
+      operationId: staff_organization_retrieve
+      description: 'Informations de la structure : lisibles par tout le personnel,
+        modifiables par le responsable.'
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StructureOrganization'
+          description: ''
+    patch:
+      operationId: staff_organization_partial_update
+      description: 'Informations de la structure : lisibles par tout le personnel,
+        modifiables par le responsable.'
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedStructureOrganization'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedStructureOrganization'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedStructureOrganization'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StructureOrganization'
+          description: ''
+  /api/v1/staff/{organization_id}/team/:
+    get:
+      operationId: staff_team_list
+      description: 'GET : l''équipe. POST : crée un agent (nouveau compte, mot de
+        passe temporaire affiché une fois).'
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StaffMember'
+          description: ''
+    post:
+      operationId: staff_team_create
+      description: 'GET : l''équipe. POST : crée un agent (nouveau compte, mot de
+        passe temporaire affiché une fois).'
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/StaffCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/StaffCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffCredentials'
+          description: ''
+  /api/v1/staff/{organization_id}/team/{id}/:
+    patch:
+      operationId: staff_team_partial_update
+      description: 'PATCH : désactive ou réactive un agent.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedStaffUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedStaffUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedStaffUpdate'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffMember'
+          description: ''
+  /api/v1/staff/{organization_id}/team/{id}/reset-password/:
+    post:
+      operationId: staff_team_reset_password_create
+      description: Limite supplémentaire sur les écritures sensibles (comptes, mots
+        de passe).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffCredentials'
+          description: ''
 components:
   schemas:
+    ActionEnum:
+      enum:
+      - BOOK_CREATED
+      - BOOK_UPDATED
+      - BOOK_ARCHIVED
+      - COPY_CREATED
+      - COPY_MOVED
+      - COPY_MARKED_LOST
+      - COPY_STATUS_CHANGED
+      - MEMBER_CREATED
+      - MEMBER_SUSPENDED
+      - LOAN_CREATED
+      - LOAN_RETURNED
+      - IMPORT_CONFIRMED
+      - IMPORT_FAILED
+      - COWORKING_PROFILE_UPDATED
+      - ZONE_CREATED
+      - ZONE_UPDATED
+      - RESOURCE_CREATED
+      - RESOURCE_UPDATED
+      - RATE_CREATED
+      - RATE_UPDATED
+      - CUSTOMER_CREATED
+      - CUSTOMER_UPDATED
+      - RESERVATION_CREATED
+      - RESERVATION_CANCELLED
+      - RESERVATION_NO_SHOW
+      - SESSION_CHECKED_IN
+      - SESSION_CHECKED_OUT
+      - SESSION_CORRECTED
+      - PAYMENT_RECORDED
+      - PAYMENT_VOIDED
+      - ORGANIZATION_CREATED
+      - ORGANIZATION_UPDATED
+      - ORGANIZATION_STATUS_CHANGED
+      - LOAN_POLICY_UPDATED
+      - STAFF_CREATED
+      - STAFF_UPDATED
+      - STAFF_PASSWORD_RESET
+      type: string
+      description: |-
+        * `BOOK_CREATED` - Livre créé
+        * `BOOK_UPDATED` - Livre modifié
+        * `BOOK_ARCHIVED` - Livre archivé
+        * `COPY_CREATED` - Exemplaire créé
+        * `COPY_MOVED` - Exemplaire déplacé
+        * `COPY_MARKED_LOST` - Exemplaire déclaré perdu
+        * `COPY_STATUS_CHANGED` - Statut d'exemplaire modifié
+        * `MEMBER_CREATED` - Membre créé
+        * `MEMBER_SUSPENDED` - Membre suspendu
+        * `LOAN_CREATED` - Prêt créé
+        * `LOAN_RETURNED` - Prêt retourné
+        * `IMPORT_CONFIRMED` - Import confirmé
+        * `IMPORT_FAILED` - Import échoué
+        * `COWORKING_PROFILE_UPDATED` - Fiche coworking modifiée
+        * `ZONE_CREATED` - Zone créée
+        * `ZONE_UPDATED` - Zone modifiée
+        * `RESOURCE_CREATED` - Ressource créée
+        * `RESOURCE_UPDATED` - Ressource modifiée
+        * `RATE_CREATED` - Tarif créé
+        * `RATE_UPDATED` - Tarif modifié
+        * `CUSTOMER_CREATED` - Client coworking créé
+        * `CUSTOMER_UPDATED` - Client coworking modifié
+        * `RESERVATION_CREATED` - Réservation créée
+        * `RESERVATION_CANCELLED` - Réservation annulée
+        * `RESERVATION_NO_SHOW` - Absence enregistrée
+        * `SESSION_CHECKED_IN` - Arrivée enregistrée
+        * `SESSION_CHECKED_OUT` - Sortie enregistrée
+        * `SESSION_CORRECTED` - Session corrigée
+        * `PAYMENT_RECORDED` - Paiement enregistré
+        * `PAYMENT_VOIDED` - Paiement annulé
+        * `ORGANIZATION_CREATED` - Structure créée
+        * `ORGANIZATION_UPDATED` - Structure modifiée
+        * `ORGANIZATION_STATUS_CHANGED` - Statut de structure modifié
+        * `LOAN_POLICY_UPDATED` - Politique de prêt modifiée
+        * `STAFF_CREATED` - Compte du personnel créé
+        * `STAFF_UPDATED` - Compte du personnel modifié
+        * `STAFF_PASSWORD_RESET` - Mot de passe du personnel réinitialisé
+    AuditLog:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        organization:
+          type: integer
+          readOnly: true
+          title: Structure
+        organization_name:
+          type: string
+          readOnly: true
+        user_email:
+          type: string
+          readOnly: true
+        action:
+          allOf:
+          - $ref: '#/components/schemas/ActionEnum'
+          readOnly: true
+        action_label:
+          type: string
+          readOnly: true
+        entity_type:
+          type: string
+          readOnly: true
+          title: Type d'objet
+        entity_id:
+          type: string
+          readOnly: true
+          title: Identifiant de l'objet
+        description:
+          type: string
+          readOnly: true
+        metadata:
+          readOnly: true
+          title: Détails
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Date
+      required:
+      - action
+      - action_label
+      - created_at
+      - description
+      - entity_id
+      - entity_type
+      - id
+      - metadata
+      - organization
+      - organization_name
+      - user_email
     BlankEnum:
       enum:
       - ''
@@ -3409,6 +4110,33 @@ components:
         notes:
           type: string
           default: ''
+    LoanPolicy:
+      type: object
+      properties:
+        loan_duration_days:
+          type: integer
+          maximum: 365
+          minimum: 1
+          title: Durée du prêt (jours)
+        max_active_loans:
+          type: integer
+          maximum: 100
+          minimum: 1
+          title: Prêts actifs maximum
+        max_renewals:
+          type: integer
+          maximum: 20
+          minimum: 0
+          title: Renouvellements maximum
+        allow_renewal:
+          type: boolean
+          title: Renouvellement autorisé
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - updated_at
     LoanReturn:
       type: object
       properties:
@@ -3520,7 +4248,7 @@ components:
         staff_organizations:
           type: array
           items:
-            $ref: '#/components/schemas/OrganizationSummary'
+            $ref: '#/components/schemas/StaffOrganization'
           readOnly: true
         memberships:
           type: array
@@ -3731,6 +4459,29 @@ components:
         * `GOOD` - Rendu en bon état
         * `DAMAGED` - Rendu endommagé
         * `LOST` - Perdu
+    PaginatedAuditLogList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditLog'
     PaginatedBookListList:
       type: object
       required:
@@ -3938,6 +4689,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Payment'
+    PaginatedPlatformOrganizationList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlatformOrganization'
     PaginatedRateList:
       type: object
       required:
@@ -4264,6 +5038,102 @@ components:
           allOf:
           - $ref: '#/components/schemas/CustomerStatusEnum'
           title: Statut
+    PatchedLoanPolicy:
+      type: object
+      properties:
+        loan_duration_days:
+          type: integer
+          maximum: 365
+          minimum: 1
+          title: Durée du prêt (jours)
+        max_active_loans:
+          type: integer
+          maximum: 100
+          minimum: 1
+          title: Prêts actifs maximum
+        max_renewals:
+          type: integer
+          maximum: 20
+          minimum: 0
+          title: Renouvellements maximum
+        allow_renewal:
+          type: boolean
+          title: Renouvellement autorisé
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    PatchedPlatformOrganization:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Nom
+          maxLength: 200
+        slug:
+          type: string
+          readOnly: true
+          title: Identifiant court
+          pattern: ^[-a-zA-Z0-9_]+$
+        description:
+          type: string
+        address:
+          type: string
+          title: Adresse
+          maxLength: 255
+        city:
+          type: string
+          title: Ville
+          maxLength: 100
+        country:
+          type: string
+          title: Pays
+          maxLength: 100
+        phone:
+          type: string
+          title: Téléphone
+          maxLength: 30
+        email:
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        website:
+          title: Site web
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
+        status:
+          allOf:
+          - $ref: '#/components/schemas/Status07fEnum'
+          readOnly: true
+          title: Statut
+        library_module:
+          type: boolean
+          title: Module bibliothèque
+        coworking_module:
+          type: boolean
+          title: Module coworking
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        staff_count:
+          type: integer
+          readOnly: true
+          default: 0
+        admin_count:
+          type: integer
+          readOnly: true
+          default: 0
     PatchedProfile:
       type: object
       properties:
@@ -4394,6 +5264,76 @@ components:
           type: boolean
         notes:
           type: string
+    PatchedStaffUpdate:
+      type: object
+      properties:
+        active:
+          type: boolean
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+    PatchedStructureOrganization:
+      type: object
+      description: Ce qu'un responsable peut modifier de sa structure (le nom, les
+        modules et le statut restent à la plateforme).
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+          title: Nom
+        slug:
+          type: string
+          readOnly: true
+          title: Identifiant court
+          pattern: ^[-a-zA-Z0-9_]+$
+        status:
+          allOf:
+          - $ref: '#/components/schemas/Status07fEnum'
+          readOnly: true
+          title: Statut
+        library_module:
+          type: boolean
+          readOnly: true
+          title: Module bibliothèque
+        coworking_module:
+          type: boolean
+          readOnly: true
+          title: Module coworking
+        description:
+          type: string
+        address:
+          type: string
+          title: Adresse
+          maxLength: 255
+        city:
+          type: string
+          title: Ville
+          maxLength: 100
+        country:
+          type: string
+          title: Pays
+          maxLength: 100
+        phone:
+          type: string
+          title: Téléphone
+          maxLength: 30
+        email:
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        website:
+          title: Site web
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
     PatchedZone:
       type: object
       properties:
@@ -4526,6 +5466,144 @@ components:
       required:
       - status
       - version
+    PlatformOrganization:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Nom
+          maxLength: 200
+        slug:
+          type: string
+          readOnly: true
+          title: Identifiant court
+          pattern: ^[-a-zA-Z0-9_]+$
+        description:
+          type: string
+        address:
+          type: string
+          title: Adresse
+          maxLength: 255
+        city:
+          type: string
+          title: Ville
+          maxLength: 100
+        country:
+          type: string
+          title: Pays
+          maxLength: 100
+        phone:
+          type: string
+          title: Téléphone
+          maxLength: 30
+        email:
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        website:
+          title: Site web
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
+        status:
+          allOf:
+          - $ref: '#/components/schemas/Status07fEnum'
+          readOnly: true
+          title: Statut
+        library_module:
+          type: boolean
+          title: Module bibliothèque
+        coworking_module:
+          type: boolean
+          title: Module coworking
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        staff_count:
+          type: integer
+          readOnly: true
+          default: 0
+        admin_count:
+          type: integer
+          readOnly: true
+          default: 0
+      required:
+      - admin_count
+      - created_at
+      - id
+      - name
+      - slug
+      - staff_count
+      - status
+    PlatformOrganizationCreate:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        slug:
+          oneOf:
+          - type: string
+            default: ''
+            maxLength: 100
+            pattern: ^[-a-zA-Z0-9_]+$
+          - type: string
+            maxLength: 0
+        description:
+          type: string
+          default: ''
+        address:
+          type: string
+          default: ''
+          maxLength: 255
+        city:
+          type: string
+          default: ''
+          maxLength: 100
+        country:
+          type: string
+          default: Togo
+          maxLength: 100
+        phone:
+          type: string
+          default: ''
+          maxLength: 30
+        email:
+          oneOf:
+          - type: string
+            format: email
+            default: ''
+          - type: string
+            maxLength: 0
+        website:
+          oneOf:
+          - type: string
+            format: uri
+            default: ''
+          - type: string
+            maxLength: 0
+        library_module:
+          type: boolean
+          default: true
+        coworking_module:
+          type: boolean
+          default: false
+        status:
+          allOf:
+          - $ref: '#/components/schemas/Status07fEnum'
+          default: ACTIVE
+      required:
+      - name
     Profile:
       type: object
       properties:
@@ -5369,6 +6447,14 @@ components:
         * `DESK` - Poste individuel
         * `ROOM` - Salle
         * `OTHER` - Autre
+    RoleEnum:
+      enum:
+      - STAFF
+      - ADMIN
+      type: string
+      description: |-
+        * `STAFF` - Personnel de structure
+        * `ADMIN` - Responsable de structure
     Session:
       type: object
       description: 'amount_paid / balance : calculés (ou lus depuis l''annotation
@@ -5455,6 +6541,138 @@ components:
       - resource_code
       - resource_name
       - status
+    StaffCreate:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        phone:
+          type: string
+          default: ''
+          maxLength: 30
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+      required:
+      - email
+      - first_name
+      - last_name
+    StaffCredentials:
+      type: object
+      description: 'Réponse à une création ou une réinitialisation : le mot de passe
+        n''est montré qu''une fois.'
+      properties:
+        member:
+          allOf:
+          - $ref: '#/components/schemas/StaffMember'
+          nullable: true
+        temporary_password:
+          type: string
+          nullable: true
+      required:
+      - member
+      - temporary_password
+    StaffMember:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user_id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+        first_name:
+          type: string
+          readOnly: true
+        last_name:
+          type: string
+          readOnly: true
+        phone:
+          type: string
+          readOnly: true
+        role:
+          allOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          readOnly: true
+        active:
+          type: boolean
+          readOnly: true
+          title: Actif
+        must_change_password:
+          type: boolean
+          readOnly: true
+        last_login:
+          type: string
+          format: date-time
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - active
+      - created_at
+      - email
+      - first_name
+      - id
+      - last_login
+      - last_name
+      - must_change_password
+      - phone
+      - role
+      - user_id
+    StaffOrganization:
+      type: object
+      description: Structure du staff, avec le rôle du compte (STAFF ou ADMIN = responsable).
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Nom
+          maxLength: 200
+        slug:
+          type: string
+          title: Identifiant court
+          maxLength: 100
+          pattern: ^[-a-zA-Z0-9_]+$
+        library_module:
+          type: boolean
+          title: Module bibliothèque
+        coworking_module:
+          type: boolean
+          title: Module coworking
+        role:
+          type: string
+          readOnly: true
+      required:
+      - id
+      - name
+      - role
+      - slug
+    Status07fEnum:
+      enum:
+      - PENDING
+      - ACTIVE
+      - SUSPENDED
+      - REJECTED
+      type: string
+      description: |-
+        * `PENDING` - En attente
+        * `ACTIVE` - Active
+        * `SUSPENDED` - Suspendue
+        * `REJECTED` - Refusée
     Status727Enum:
       enum:
       - CONFIRMED
@@ -5483,6 +6701,83 @@ components:
       description: |-
         * `OPEN` - En cours
         * `CLOSED` - Terminée
+    StatusInput:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/Status07fEnum'
+      required:
+      - status
+    StructureOrganization:
+      type: object
+      description: Ce qu'un responsable peut modifier de sa structure (le nom, les
+        modules et le statut restent à la plateforme).
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+          title: Nom
+        slug:
+          type: string
+          readOnly: true
+          title: Identifiant court
+          pattern: ^[-a-zA-Z0-9_]+$
+        status:
+          allOf:
+          - $ref: '#/components/schemas/Status07fEnum'
+          readOnly: true
+          title: Statut
+        library_module:
+          type: boolean
+          readOnly: true
+          title: Module bibliothèque
+        coworking_module:
+          type: boolean
+          readOnly: true
+          title: Module coworking
+        description:
+          type: string
+        address:
+          type: string
+          title: Adresse
+          maxLength: 255
+        city:
+          type: string
+          title: Ville
+          maxLength: 100
+        country:
+          type: string
+          title: Pays
+          maxLength: 100
+        phone:
+          type: string
+          title: Téléphone
+          maxLength: 30
+        email:
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        website:
+          title: Site web
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
+      required:
+      - coworking_module
+      - id
+      - library_module
+      - name
+      - slug
+      - status
     TokenRefresh:
       type: object
       properties:
