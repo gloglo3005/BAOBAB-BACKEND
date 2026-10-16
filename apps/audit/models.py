@@ -35,6 +35,8 @@ class AuditLog(models.Model):
         MEMBER_SUSPENDED = "MEMBER_SUSPENDED", "Membre suspendu"
         LOAN_CREATED = "LOAN_CREATED", "Prêt créé"
         LOAN_RETURNED = "LOAN_RETURNED", "Prêt retourné"
+        LOAN_RENEWED = "LOAN_RENEWED", "Prêt renouvelé"
+        MEMBER_UPDATED = "MEMBER_UPDATED", "Membre modifié"
         IMPORT_CONFIRMED = "IMPORT_CONFIRMED", "Import confirmé"
         IMPORT_FAILED = "IMPORT_FAILED", "Import échoué"
         # --- coworking

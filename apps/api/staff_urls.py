@@ -4,6 +4,7 @@ from . import staff_catalog_views as k
 from . import staff_circulation_views as c
 from . import staff_members_views as m
 from . import staff_views as v
+from . import staff_updates_views as u
 from . import team_views as t
 
 urlpatterns = [
@@ -33,7 +34,7 @@ urlpatterns = [
     path("locations/<str:pk>/", k.LocationDetailView.as_view(), name="staff-location-detail"),
     # Membres
     path("members/", m.MemberListCreateView.as_view(), name="staff-members"),
-    path("members/<str:pk>/", v.MemberDetailView.as_view(), name="staff-member-detail"),
+    path("members/<str:pk>/", u.MemberDetailUpdateView.as_view(), name="staff-member-detail"),
     path("members/<str:pk>/accept/", m.MemberAcceptView.as_view(), name="staff-member-accept"),
     path("members/<str:pk>/reject/", m.MemberRejectView.as_view(), name="staff-member-reject"),
     path("members/<str:pk>/suspend/", m.MemberSuspendView.as_view(), name="staff-member-suspend"),
@@ -48,4 +49,5 @@ urlpatterns = [
     path("loans/<str:pk>/", v.LoanDetailView.as_view(), name="staff-loan-detail"),
     path("loans/<str:pk>/return/", c.LoanReturnView.as_view(), name="staff-loan-return"),
     path("loans/<str:pk>/lost/", c.LoanLostView.as_view(), name="staff-loan-lost"),
+    path("loans/<str:pk>/renew/", u.LoanRenewView.as_view(), name="staff-loan-renew"),
 ]
