@@ -2689,6 +2689,150 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /api/v1/staff/{organization_id}/imports/:
+    get:
+      operationId: staff_imports_list
+      description: 'GET : historique des imports. POST : envoi d''un fichier (champ
+        « file »), qui renvoie l''aperçu.'
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Nombre de résultats à retourner par page.
+        schema:
+          type: integer
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedImportBatchList'
+          description: ''
+    post:
+      operationId: staff_imports_create
+      description: 'GET : historique des imports. POST : envoi d''un fichier (champ
+        « file »), qui renvoie l''aperçu.'
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+              required:
+              - file
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/staff/{organization_id}/imports/{id}/:
+    get:
+      operationId: staff_imports_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/staff/{organization_id}/imports/{id}/confirm/:
+    post:
+      operationId: staff_imports_confirm_create
+      description: 'POST : confirme l''import. 409 si l''aperçu contient des erreurs
+        ou si l''import est déjà fait.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/staff/{organization_id}/imports/template/:
+    get:
+      operationId: staff_imports_template_retrieve
+      description: 'Modèle CSV : UTF-8 avec signature et point-virgule, pour s''ouvrir
+        bien dans Excel.'
+      parameters:
+      - in: path
+        name: organization_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - staff
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+          description: ''
   /api/v1/staff/{organization_id}/loan-policy/:
     get:
       operationId: staff_loan_policy_retrieve
@@ -3444,6 +3588,8 @@ components:
       - MEMBER_SUSPENDED
       - LOAN_CREATED
       - LOAN_RETURNED
+      - LOAN_RENEWED
+      - MEMBER_UPDATED
       - IMPORT_CONFIRMED
       - IMPORT_FAILED
       - COWORKING_PROFILE_UPDATED
@@ -3483,6 +3629,8 @@ components:
         * `MEMBER_SUSPENDED` - Membre suspendu
         * `LOAN_CREATED` - Prêt créé
         * `LOAN_RETURNED` - Prêt retourné
+        * `LOAN_RENEWED` - Prêt renouvelé
+        * `MEMBER_UPDATED` - Membre modifié
         * `IMPORT_CONFIRMED` - Import confirmé
         * `IMPORT_FAILED` - Import échoué
         * `COWORKING_PROFILE_UPDATED` - Fiche coworking modifiée
@@ -4002,6 +4150,69 @@ components:
       description: |-
         * `ACTIVE` - Actif
         * `SUSPENDED` - Suspendu
+    ImportBatch:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        file_name:
+          type: string
+          title: Nom du fichier
+          maxLength: 255
+        status:
+          allOf:
+          - $ref: '#/components/schemas/ImportBatchStatusEnum'
+          title: Statut
+        status_label:
+          type: string
+          readOnly: true
+        row_count:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          title: Lignes
+        imported_count:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          title: Lignes importées
+        error_count:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          title: Erreurs
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        user_email:
+          type: string
+          readOnly: true
+        can_confirm:
+          type: boolean
+          readOnly: true
+      required:
+      - can_confirm
+      - created_at
+      - file_name
+      - id
+      - status_label
+      - user_email
+    ImportBatchStatusEnum:
+      enum:
+      - UPLOADED
+      - PREVIEWED
+      - CONFIRMED
+      - IMPORTED
+      - FAILED
+      type: string
+      description: |-
+        * `UPLOADED` - Téléversé
+        * `PREVIEWED` - Prévisualisé
+        * `CONFIRMED` - Confirmé
+        * `IMPORTED` - Importé
+        * `FAILED` - Échoué
     LinkCode:
       type: object
       properties:
@@ -4574,6 +4785,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Customer'
+    PaginatedImportBatchList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImportBatch'
     PaginatedLoanList:
       type: object
       required:

@@ -117,7 +117,7 @@ class ImportApiTests(TestCase):
         self.assertEqual(self.client.post(self.url("abc/confirm/")).status_code, 404)
 
     def test_template(self):
-        data = self.client.get(self.url("template/")).data
-        self.assertEqual(data["columns"][0], "title")
-        self.assertEqual(data["required"], ["title"])
-        self.assertTrue(data["rows"])
+        response = self.client.get(self.url("template/"))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("text/csv", response["Content-Type"])
+        self.assertIn("title;inventory_code", response.content.decode("utf-8-sig"))
