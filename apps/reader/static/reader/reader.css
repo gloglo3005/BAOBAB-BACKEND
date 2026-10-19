@@ -140,4 +140,9 @@ html { scroll-behavior: smooth; }
   html { scroll-behavior: auto; }
   * { transition: none !important; animation: none !important; }
 }
+/* Liens : jamais soulignes (texte simple, bouton, carte, menu), quel que soit l'etat */
+a, a:link, a:visited, a:hover, a:focus, a:focus-visible, a:active,
+.linklike, .linklike:hover, .linklike:focus {
+  text-decoration: none !important;
+}
 /* <<< baobab-ui-v2 <<< */
