@@ -135,11 +135,27 @@ STORAGES = {
 MEDIA_ROOT = BASE_DIR / "media"
 
 
-MAILERS = {
-    "default": {
-        "BACKEND": "django.core.mail.backends.console.EmailBackend",
-    },
-}
+# E-mails (Django 6.1 : MAILERS). Sans RESEND_API_KEY (développement, tests), les messages
+# s'affichent dans la console. Avec RESEND_API_KEY, ils partent par l'API HTTPS de Resend
+# (apps/accounts/mail_backends.py) : les services gratuits de Render bloquent le SMTP sortant.
+# L'expéditeur doit appartenir à un domaine vérifié chez Resend.
+_resend_api_key = os.environ.get("RESEND_API_KEY", "")
+if _resend_api_key:
+    MAILERS = {
+        "default": {
+            "BACKEND": "apps.accounts.mail_backends.ResendEmailBackend",
+            "OPTIONS": {"api_key": _resend_api_key, "timeout": 10},
+        },
+    }
+else:
+    MAILERS = {
+        "default": {
+            "BACKEND": "django.core.mail.backends.console.EmailBackend",
+        },
+    }
+
+# Adresse d'expédition. onboarding@resend.dev ne sert qu'aux essais (vers votre propre adresse).
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "Baobab <onboarding@resend.dev>")
 
 AUTH_USER_MODEL = "accounts.User"
 
