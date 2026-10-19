@@ -2,13 +2,16 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#123a2c">
+  <meta name="color-scheme" content="light">
   <title>{% block title %}Staff{% endblock %}{% if request.organization %} · {{ request.organization.name }}{% endif %}</title>
   <link rel="stylesheet" href="{% static 'staff/staff.css' %}">
   <link rel="stylesheet" href="{% static 'staff/coworking.css' %}">
   <script src="{% static 'staff/htmx.min.js' %}" defer></script>
 </head>
 <body>
+<a class="skip-link" href="#contenu">Aller au contenu</a>
 {% with section=request.resolver_match.url_name %}
 {% if request.organization %}
 <header class="topbar">
@@ -45,7 +48,7 @@
 </header>
 {% endif %}
 {% endwith %}
-<main class="page">
+<main class="page" id="contenu">
   {% if messages %}
   <div class="messages" role="status">
     {% for message in messages %}<p class="msg msg-{{ message.level_tag }}">{{ message }}</p>{% endfor %}

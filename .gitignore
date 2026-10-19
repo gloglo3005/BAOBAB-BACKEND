@@ -1,7 +1,12 @@
+# Environnement et secrets
 .venv/
+.env
+
+# Python
 __pycache__/
 *.pyc
-.env
+
+# Fichiers generes ou locaux
 media/
 staticfiles/
 db.sqlite3

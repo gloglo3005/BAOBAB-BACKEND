@@ -1,0 +1,43 @@
+/* Interface Staff : compléments pour le coworking (badges de statut, tableaux de bord, listes de départ). */
+.s-confirmed { background: #e1eef2; color: var(--primary-dark); }
+.s-open { background: var(--warn-bg); color: var(--warn); }
+.s-completed, .s-closed, .s-recorded { background: var(--good-bg); color: var(--good); }
+.s-cancelled, .s-voided { background: #e7eeef; color: var(--muted); }
+.s-no_show { background: var(--bad-bg); color: var(--bad); }
+
+.stat-good dd { color: var(--good); }
+.stat dd small { font-size: 0.9rem; font-weight: 400; color: var(--muted); }
+.stat dd.stat-text { font-size: 1.05rem; line-height: 1.4; }
+
+.cw-dashboard { margin-top: 1rem; }
+
+.checklist { margin: 0 0 1.5rem; padding-left: 1.5rem; }
+.checklist li { margin: 0.25rem 0; }
+.checklist li.done { color: var(--good); text-decoration: line-through; }
+
+.hours input[type="time"] { width: 9rem; }
+fieldset.panel .field + .field { margin-top: 0.75rem; }
+
+/* Comptoir : choix cliquable, reçu, session */
+.choice-link { text-decoration: none; color: inherit; }
+.choice-link:hover { border-color: var(--primary); }
+.void-banner { background: var(--bad-bg); color: var(--bad); font-weight: 700; padding: 0.6rem 0.9rem; border-radius: var(--radius); }
+
+/* Planning de la journée : une ligne par ressource, blocs positionnés en pourcentage */
+.planning-wrap { overflow-x: auto; margin-bottom: 1rem; }
+.planning { min-width: 52rem; border: 1px solid var(--border, #d5dfe1); border-radius: var(--radius); background: #fff; }
+.pl-row { display: grid; grid-template-columns: 12rem 1fr; border-top: 1px solid var(--border, #d5dfe1); }
+.pl-row:first-child { border-top: 0; }
+.pl-label { padding: 0.5rem 0.75rem; display: flex; flex-direction: column; gap: 0.15rem; font-size: 0.95rem; }
+.pl-book { font-size: 0.85rem; }
+.pl-track { position: relative; min-height: 3.25rem; border-left: 1px solid var(--border, #d5dfe1); }
+.pl-head .pl-track { min-height: 2rem; }
+.pl-hour { position: absolute; top: 0.4rem; transform: translateX(-50%); font-size: 0.8rem; color: var(--muted); }
+.pl-head .pl-hour:first-child { transform: none; margin-left: 0.2rem; }
+.pl-grid { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--border, #d5dfe1); opacity: 0.6; }
+.pl-now { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--bad); z-index: 2; }
+.pl-item { position: absolute; top: 0.4rem; bottom: 0.4rem; z-index: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; padding: 0.2rem 0.4rem; border-radius: 6px; border: 1px solid rgba(0, 0, 0, 0.15); font-size: 0.8rem; text-decoration: none; line-height: 1.2; }
+.pl-item:hover { outline: 2px solid var(--primary); }
+.pl-time { font-weight: 700; }
+.pl-reservation { border-style: dashed; }
+.legend { display: flex; flex-wrap: wrap; gap: 0.5rem; }

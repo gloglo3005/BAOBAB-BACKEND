@@ -1,0 +1,58 @@
+{% load static %}<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Staff{% endblock %}{% if request.organization %} · {{ request.organization.name }}{% endif %}</title>
+  <link rel="stylesheet" href="{% static 'staff/staff.css' %}">
+  <link rel="stylesheet" href="{% static 'staff/coworking.css' %}">
+  <script src="{% static 'staff/htmx.min.js' %}" defer></script>
+</head>
+<body>
+{% with section=request.resolver_match.url_name %}
+{% if request.organization %}
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="{% url 'staff:dashboard' %}">{{ request.organization.name }}</a>
+    <div class="who">
+      {% if request.staff_memberships|length > 1 %}<a href="{% url 'staff:organizations' %}">Changer de structure</a>{% endif %}
+      <span class="who-mail">{{ request.user.email }}</span>
+      <form method="post" action="{% url 'staff:logout' %}">{% csrf_token %}<button class="linklike" type="submit">Se déconnecter</button></form>
+    </div>
+  </div>
+  <nav class="nav" aria-label="Navigation principale">
+    <a href="{% url 'staff:dashboard' %}"{% if section == 'dashboard' %} aria-current="page"{% endif %}>Tableau de bord</a>
+    {% if request.organization.library_module %}
+    <a href="{% url 'staff:search' %}"{% if section == 'search' %} aria-current="page"{% endif %}>Recherche</a>
+    <a href="{% url 'staff:loan' %}"{% if section == 'loan' or section == 'loan_receipt' %} aria-current="page"{% endif %}>Prêt</a>
+    <a href="{% url 'staff:return' %}"{% if section == 'return' %} aria-current="page"{% endif %}>Retour</a>
+    <a href="{% url 'staff:overdue' %}"{% if section == 'overdue' %} aria-current="page"{% endif %}>Retards</a>
+    <a href="{% url 'staff:members' %}"{% if section == 'members' or section == 'member_new' or section == 'member_detail' %} aria-current="page"{% endif %}>Membres</a>
+    <a href="{% url 'staff:catalog' %}"{% if section == 'catalog' or section == 'book_detail' %} aria-current="page"{% endif %}>Catalogue</a>
+    <a href="{% url 'staff:history' %}"{% if section == 'history' %} aria-current="page"{% endif %}>Historique</a>
+    <a href="{% url 'imports:import_upload' %}"{% if section == 'import_upload' or section == 'import_detail' or section == 'import_history' %} aria-current="page"{% endif %}>Import</a>
+    {% endif %}
+    {% if request.organization.coworking_module %}
+    <a href="{% url 'staff:cw_reception' %}"{% if section == 'cw_reception' or section == 'cw_session_detail' %} aria-current="page"{% endif %}>Accueil coworking</a>
+    <a href="{% url 'staff:cw_planning' %}"{% if section == 'cw_planning' %} aria-current="page"{% endif %}>Planning</a>
+    <a href="{% url 'staff:cw_reservations' %}"{% if section|slice:':14' == 'cw_reservation' %} aria-current="page"{% endif %}>Réservations</a>
+    <a href="{% url 'staff:cw_sessions' %}"{% if section == 'cw_sessions' or section == 'cw_session_correct' %} aria-current="page"{% endif %}>Sessions</a>
+    <a href="{% url 'staff:cw_customers' %}"{% if section|slice:':11' == 'cw_customer' %} aria-current="page"{% endif %}>Clients coworking</a>
+    <a href="{% url 'staff:cw_payments' %}"{% if section|slice:':10' == 'cw_payment' or section == 'cw_unpaid' %} aria-current="page"{% endif %}>Paiements</a>
+    <a href="{% url 'staff:cw_setup' %}"{% if section == 'cw_setup' or section|slice:':7' == 'cw_zone' or section|slice:':11' == 'cw_resource' or section|slice:':7' == 'cw_rate' or section == 'cw_rules' %} aria-current="page"{% endif %}>Config. coworking</a>
+    {% endif %}
+  </nav>
+</header>
+{% endif %}
+{% endwith %}
+<main class="page">
+  {% if messages %}
+  <div class="messages" role="status">
+    {% for message in messages %}<p class="msg msg-{{ message.level_tag }}">{{ message }}</p>{% endfor %}
+  </div>
+  {% endif %}
+  {% block content %}{% endblock %}
+</main>
+{% block scripts %}{% endblock %}
+</body>
+</html>

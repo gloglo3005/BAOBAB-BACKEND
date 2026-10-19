@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#123a2c">
+  <meta name="color-scheme" content="light dark">
+  <title>Page introuvable · Baobab</title>
+  <style>
+    :root { --bg: #f6f3ea; --card: #fffdf7; --text: #1f2a22; --muted: #5f695c; --line: #e3dcc9; --green: #1b5a43; --ochre: #d99a2b; }
+    @media (prefers-color-scheme: dark) { :root { --bg: #101913; --card: #18221b; --text: #e8ece4; --muted: #a3ad9d; --line: #2a382e; --green: #2a7f5a; } }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 1rem; background: var(--bg); color: var(--text); font: 17px/1.5 ui-sans-serif, system-ui, "Segoe UI", Roboto, Arial, sans-serif; }
+    main { width: min(460px, 100%); text-align: center; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 2rem 1.5rem; box-shadow: 0 10px 28px rgba(22, 58, 43, .12); }
+    .code { margin: 0; font-size: 3.5rem; font-weight: 800; line-height: 1; color: var(--ochre); }
+    h1 { margin: .5rem 0; font-size: 1.4rem; }
+    p { margin: 0 0 .75rem; color: var(--muted); }
+    .actions { display: flex; flex-wrap: wrap; gap: .5rem; justify-content: center; margin-top: 1.25rem; }
+    a.btn { display: inline-flex; align-items: center; min-height: 44px; padding: .5rem 1rem; border-radius: 8px; background: var(--green); color: #fff; font-weight: 600; text-decoration: none; }
+    a.btn.secondary { background: transparent; color: var(--text); border: 1px solid var(--line); }
+    a:focus-visible { outline: 3px solid var(--ochre); outline-offset: 2px; }
+  </style>
+</head>
+<body>
+  <main role="main">
+    <p class="code" aria-hidden="true">404</p>
+    <h1>Page introuvable</h1>
+    <p>Cette adresse n'existe pas ou a été déplacée. Vérifiez l'adresse saisie ou revenez à l'accueil.</p>
+    <div class="actions"><a class="btn" href="/reader/">Espace lecteur</a><a class="btn secondary" href="/staff/">Espace personnel</a></div>
+  </main>
+</body>
+</html>

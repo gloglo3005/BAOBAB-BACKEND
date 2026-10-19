@@ -33,7 +33,7 @@ p { margin: 0 0 0.75rem; }
 
 .top { background: var(--ink); color: #fff; padding-top: env(safe-area-inset-top); }
 .top-inner { max-width: 640px; margin: 0 auto; padding: 0.7rem 1rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-.top a { color: #cfe3e7; text-decoration: none; min-height: 2.75rem; display: inline-flex; align-items: center; }
+.top a { color: #d3e6da; text-decoration: none; min-height: 2.75rem; display: inline-flex; align-items: center; }
 .top a[aria-current="page"] { color: #fff; font-weight: 600; }
 .brand { color: #fff !important; font-weight: 700; font-size: 1.15rem; }
 
@@ -46,7 +46,7 @@ p { margin: 0 0 0.75rem; }
 .msg-success { background: var(--good-bg); border-color: var(--good); color: var(--good); }
 .msg-error { background: var(--bad-bg); border-color: var(--bad); color: var(--bad); }
 .msg-warning { background: var(--warn-bg); border-color: var(--warn); color: var(--warn); }
-.msg-info { background: #e6f1f4; border-color: var(--primary); color: var(--primary-dark); }
+.msg-info { background: #e3f0e8; border-color: var(--primary); color: var(--primary-dark); }
 .hint { color: var(--muted); }
 
 .btn {
@@ -56,7 +56,7 @@ p { margin: 0 0 0.75rem; }
 }
 .btn:hover { background: var(--primary-dark); color: #fff; }
 .btn-secondary { background: var(--surface); color: var(--primary); }
-.btn-secondary:hover { background: #e6f1f4; color: var(--primary-dark); }
+.btn-secondary:hover { background: #e3f0e8; color: var(--primary-dark); }
 .btn-danger { background: var(--surface); color: var(--bad); border-color: var(--bad); }
 .btn-danger:hover { background: var(--bad-bg); color: var(--bad); }
 .btn-large { width: 100%; min-height: 3.2rem; }
@@ -87,7 +87,7 @@ p { margin: 0 0 0.75rem; }
 .member-card { text-align: center; }
 .member-number { font-size: 2rem; font-weight: 700; letter-spacing: 0.04em; margin: 0; }
 
-.badge { display: inline-block; font-size: 0.85rem; font-weight: 600; padding: 0.1rem 0.6rem; border-radius: 999px; background: #e7eeef; color: var(--ink); }
+.badge { display: inline-block; font-size: 0.85rem; font-weight: 600; padding: 0.1rem 0.6rem; border-radius: 999px; background: #ebe8dc; color: var(--ink); }
 .b-good { background: var(--good-bg); color: var(--good); }
 .b-warn { background: var(--warn-bg); color: var(--warn); }
 .b-bad { background: var(--bad-bg); color: var(--bad); }
@@ -119,3 +119,25 @@ p { margin: 0 0 0.75rem; }
 @media (min-width: 700px) {
   .tabbar { max-width: 640px; margin: 0 auto; border-left: 1px solid var(--line); border-right: 1px solid var(--line); }
 }
+
+/* >>> baobab-ui-v2 (genere par Update-BaobabUi.ps1, ne pas modifier a la main) >>> */
+/* Palette Baobab : meme identite visuelle que les applications React */
+:root {
+  --ink: #123a2c;
+  --muted: #5f695c;
+  --paper: #f6f3ea;
+  --line: #e1dac8;
+  --primary: #1b7351;
+  --primary-dark: #135a3e;
+}
+
+/* Accessibilite : lien d'evitement pour le clavier et les lecteurs d'ecran */
+.skip-link { position: absolute; left: -999px; top: 0; z-index: 100; padding: 0.6rem 1rem; background: #fff; color: #123a2c; font-weight: 600; border-radius: 0 0 8px 0; }
+.skip-link:focus { left: 0; }
+:where(main):focus { outline: none; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { transition: none !important; animation: none !important; }
+}
+/* <<< baobab-ui-v2 <<< */
